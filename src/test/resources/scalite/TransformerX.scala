@@ -25,7 +25,6 @@ trait TransformerY extends Scanners
     for((tokens, row) <- lines.zipWithIndex)
       println(row + ":" + tokens(0).col + ";\t" + tokens.map(_.prettyPrint).mkString("    "))
 
-
     lines.flatten
 
   def lineify(input: Seq[TokenData])(implicit source: SourceFile): mutable.Buffer[mutable.Buffer[TokenData]] =
@@ -38,11 +37,9 @@ trait TransformerY extends Scanners
         lines.append(mutable.Buffer())
         currentLine = token.line
 
-
       lines.last.append(token)
 
     lines
-
 
   def insertBraces(lines: mutable.Buffer[mutable.Buffer[TokenData]])(implicit source: SourceFile) =
     val stack = mutable.Stack[Int](1)
@@ -50,7 +47,6 @@ trait TransformerY extends Scanners
     for (i <- 0 until lines.length - 1)
       val line = lines(i)
       val next = lines(i+1)
-
 
       while(next.head.col < stack.top)
         for (token <- Seq(Tokens.RBRACE))
