@@ -4,7 +4,8 @@ import scala.tools.nsc.ast.parser.{Parsers, Scanners, Tokens}
 import scala.tools.nsc.ast.parser.Tokens._
 import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.Global
-import scala.reflect.internal.Trees
+import scala.reflect.internal.{ModifierFlags, Trees}
+import scala.collection.mutable.ListBuffer
 
 
 trait Transformer extends Parsers with Scanners { t =>
@@ -66,9 +67,6 @@ trait Transformer extends Parsers with Scanners { t =>
       for(j <- 0 until line.length) line(j).token match{
         case Tokens.CLASS =>
 
-          println("woo")
-          println(new PartialParser(tokenStream(i, j)).declHeader)
-          println("omg")
           val s = tokenStream(i, j)
 
           s.take(5)
@@ -83,31 +81,75 @@ trait Transformer extends Parsers with Scanners { t =>
       val remainingLines = lines.drop(i)
       remainingLines(0) = remainingLines(0).drop(j)
       remainingLines.flatten.toIterator
-
     }
-  }
-
-  class FakeScanner(input: Iterator[ScannerData]) extends Scanner{
-    def error(off: Int, msg: String) {}
-    def incompleteInputError(off: Int, msg: String) {}
-    def deprecationWarning(off: Int, msg: String) {}
-    val buf: Array[Char] = Array()
-
-    override def nextToken() = this.copyFrom(input.next())
+    def matchHeader(input: Iterator[ScannerData]) = {
+      import Tokens._
+      val first = input.next()
+      first.token match{
+        case RETURN | TRY | DO | THROW | FINALLY | MATCH => 1
+        case FOR => new PartialParser(Iterator(first) ++ input).forHeader
+        case IF | WHILE => new PartialParser(Iterator(first) ++ input).ifWhileHeader
+        case CLASS | OBJECT | TRAIT => new PartialParser(Iterator(first) ++ input).declHeader
+      }
+    }
   }
 
   class PartialParser(inputDontUseMe: Iterator[ScannerData]) extends SourceFileParser(null) {
     val global = t.global
     var index = 0
 
-    override def newScanner(): Scanner = new FakeScanner(inputDontUseMe.map{x => index += 1; x})
+    override def newScanner(): Scanner = new Scanner{
+      def error(off: Int, msg: String) {}
+      def incompleteInputError(off: Int, msg: String) {}
+      def deprecationWarning(off: Int, msg: String) {}
+      val buf: Array[Char] = Array()
+      override def nextToken() = {
+        index += 1
+        this.copyFrom(inputDontUseMe.next())
+      }
+    }
 
     def declHeader = {
       index = 0
-      tmplDef(0, modifiers())
+      val d = tmplDef(0, modifiers())
+      index
+    }
+    import treeBuilder.{global => _, _}
+
+    def valVarHeader = {
+      index = 0
+      in.nextToken()
+      val lhs = commaSeparated(stripParens(noSeq.pattern2()))
+      val tp = typedOpt()
+      accept(EQUALS)
       index
     }
 
+    private var classContextBounds: List[t.global.Tree] = Nil
+    @inline private def savingClassContextBounds[T](op: => T): T = {
+      val saved = classContextBounds
+      try op
+      finally classContextBounds = saved
+    }
+
+    def defHeader = {
+      index = 0
+      in.nextToken()
+      if (in.token == THIS) {
+        val vparamss = paramClauses(t.global.nme.CONSTRUCTOR, classContextBounds map (_.duplicate), ofCaseClass = false)
+        typedOpt()
+        accept(EQUALS)
+      } else {
+        val nameOffset = in.offset
+        val name = ident()
+        val contextBoundBuf = new ListBuffer[t.global.Tree]
+        val tparams = typeParamClauseOpt(name, contextBoundBuf)
+        val vparamss = paramClauses(name, contextBoundBuf.toList, ofCaseClass = false)
+        typedOpt()
+        accept(EQUALS)
+      }
+      index
+    }
     def ifWhileHeader = {
       index = 0
       in.nextToken()
@@ -127,6 +169,8 @@ trait Transformer extends Parsers with Scanners { t =>
       }
       index
     }
+
+
     def parseAll = {
       val buff = mutable.Buffer.empty[TokenData]
       do{
@@ -137,8 +181,5 @@ trait Transformer extends Parsers with Scanners { t =>
       }while(in.token != EOF)
       buff
     }
-    override def templateBody(isPre: Boolean) = (t.global.emptyValDef, Nil)
-
-
   }
 }
