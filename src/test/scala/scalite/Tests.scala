@@ -11,7 +11,7 @@ class Tests extends FreeSpec{
     val first = make("scalite.TrivialClass")
     println(first)
   }
-  "match" in {
+  /*"match" in {
     val first = make("scalite.Match")
     println(first)
   }
@@ -19,10 +19,14 @@ class Tests extends FreeSpec{
     val first = make("scalite.MultiDef")
     println(first)
   }
+  "ignored indent" in {
+    val first = make("scalite.IgnoredIndent")
+    println(first)
+  }
   "transformerX" in {
     val first = make("scalite.TransformerX")
     println(first)
-  }
+  }*/
 }
 
 

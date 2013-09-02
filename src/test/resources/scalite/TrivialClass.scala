@@ -1,6 +1,7 @@
 package scalite
 
-class TrivialClass
+class
+TrivialClass
   def apply(): String =
     "Hello World!" + 1
 

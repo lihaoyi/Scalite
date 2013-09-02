@@ -15,7 +15,9 @@ object TestUtils {
     else List(src)
   }
 
-  /* Instantiates an object of type T passing the given arguments to its first constructor */
+
+
+
   def make(name: String) = {
 
     val sources = List("src/test/resources/" + name.replace('.', '/') + ".scala")
