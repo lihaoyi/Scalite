@@ -1,10 +1,10 @@
 package scalite.simple
 
 class MultiDef
-  def apply(): String =
-    "Hello World!" + value
+   def apply(): String =
+      "Hello World!" + value
 
-  def value =
-    10
+   def value =
+      10
 
 

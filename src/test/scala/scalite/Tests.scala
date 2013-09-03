@@ -7,38 +7,23 @@ import org.scalatest._
 class Tests extends FreeSpec{
   import TestUtils._
 
-  "trivial class" in {
-    val first = make("scalite.simple.Class")
-    println(first)
+  "simple" - {
+    "class" in make("scalite.simple.Class")
+    "assignments" in make("scalite.simple.Assignments")
+    "ifelsewhile" in make("scalite.simple.IfElseWhile")
+    "for" in make("scalite.simple.For")
+    "match" in make("scalite.simple.Match")
+    "multidef" in make("scalite.simple.MultiDef")
   }
-  "assignments" in {
-    val first = make("scalite.simple.Assignments")
-    println(first)
+  "messy" - {
+    "class" in make("scalite.messy.Class")
+    "assignments" in make("scalite.messy.Assignments")
+    "ifelsewhile" in make("scalite.messy.IfElseWhile")
+    "for" in make("scalite.simple.For")
+//    "match" in make("scalite.simple.Match")
+
   }
-  "ifelsewhile" in {
-    val first = make("scalite.simple.IfElseWhile")
-    println(first)
-  }
-  "for" in {
-    val first = make("scalite.simple.For")
-    println(first)
-  }
-  "match" in {
-    val first = make("scalite.simple.Match")
-    println(first)
-  }
-  "multidef" in {
-    val first = make("scalite.simple.MultiDef")
-    println(first)
-  }
-  "ignored indent" in {
-    val first = make("scalite.simple.IgnoredIndent")
-    println(first)
-  }
-  "transformerX" in {
-    val first = make("scalite.simple.TransformerX")
-    println(first)
-  }
+
 }
 
 

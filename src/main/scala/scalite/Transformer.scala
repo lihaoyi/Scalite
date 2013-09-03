@@ -4,7 +4,7 @@ import scala.tools.nsc.ast.parser.{Parsers, Scanners, Tokens}
 import scala.reflect.internal.util.SourceFile
 
 sealed trait Insertion
-case object LBrace extends Insertion
+case class LBrace(baseIndent: Int) extends Insertion
 case object RBrace extends Insertion
 /**
  * Performs transformations on the Scanner's token stream inside the
@@ -57,16 +57,18 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       val curr = input(i)
       println(i + "\tloop\t" + stack.top + "\t" + curr.col + "\t" + token2string(curr.token))
 
+      insertions(i).collect{case LBrace(baseIndent) =>
+        stack.push(baseIndent)
+      }
       if (input(i).token == Tokens.EOF){
-        println("==================EOF======================")
         while(1 < stack.top){
-          insertions(i-1) = RBrace :: insertions(i-1)
+          insertions(i-1) ::= RBrace
           println{"POP STACK " + stack.pop()}
         }
       }else {
         for(next <- nextLineToken(i)){
           while(input(next).col < stack.top){
-            insertions(i) = RBrace :: insertions(i)
+            insertions(i) ::= RBrace
             println{"POP STACK " + stack.pop()}
           }
         }
@@ -78,14 +80,11 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
 
         last = input(i + offset)
         next <- nextLineToken(i + offset - 1)
-        _ = println("offset " + offset)
-        _ = println("next " + next)
         if input(next).line > input(i).line
         if input(next).col > colForLine(input(i).line)
       }{
-        stack.push(input(next).col)
         println("PUSH STACK " + stack.top)
-        insertions(i + offset-1) = LBrace :: insertions(i)
+        insertions(i + offset - 1) ::= LBrace(input(next).col)
       }
     }
 
@@ -93,7 +92,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
     for(i <- 0 until input.length){
       merged.append(input(i))
       insertions(i).foreach{
-        case LBrace =>
+        case LBrace(baseIndent) =>
           val td = new ScannerData{}
           td.copyFrom(merged.last)
           td.token = Tokens.LBRACE
@@ -118,66 +117,4 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
     println("")
     merged
   }
-
-  def lineify(input: Seq[ScannerData])(implicit source: SourceFile): mutable.Buffer[mutable.Buffer[ScannerData]] = {
-
-    val lines = mutable.Buffer.empty[mutable.Buffer[ScannerData]]
-    var currentLine = 0
-    for(token <- input){
-      if(token.line > currentLine &&
-        token.token != Tokens.NEWLINE &&
-        token.token != Tokens.NEWLINES){
-
-        lines.append(mutable.Buffer())
-        currentLine = token.line
-      }
-
-      lines.last.append(token)
-    }
-    lines
-
-  }
-  def insertBraces(lines: mutable.Buffer[mutable.Buffer[ScannerData]])(implicit source: SourceFile) = {
-    val stack = mutable.Stack[Int](1)
-
-
-    for (i <- 0 until lines.length - 1){
-      val line = lines(i)
-      val next = lines(i+1)
-
-      // Unwind stack and place closing braces where necessary
-      while(next.head.col < stack.top){
-        for (token <- Seq(Tokens.RBRACE)){
-          val td = new ScannerData{}
-          td.copyFrom(line.head)
-          td.token = token
-          line.last.token match{
-            case Tokens.NEWLINE | Tokens.NEWLINES | Tokens.SEMI =>
-              line.insert(line.length-1,  td)
-            case _ => line.append(td)
-          }
-        }
-        stack.pop()
-      }
-
-      for(j <- 0 until line.length) line(j).token match{
-        case Tokens.CLASS =>
-
-          val s = tokenStream(i, j)
-
-          s.take(5)
-           .map(_.token)
-           .map(token2string)
-           .foreach(println)
-        case _ =>
-      }
-    }
-
-    def tokenStream(i: Int, j: Int) = {
-      val remainingLines = lines.drop(i)
-      remainingLines(0) = remainingLines(0).drop(j)
-      remainingLines.flatten.toIterator
-    }
-  }
-
 }

@@ -15,9 +15,6 @@ object TestUtils {
     else List(src)
   }
 
-
-
-
   def make(name: String) = {
 
     val sources = List("src/test/resources/" + name.replace('.', '/') + ".scala")
