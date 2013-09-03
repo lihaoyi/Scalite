@@ -1,4 +1,4 @@
-package scalite
+package scalite.simple
 
 class MultiDef
   def apply(): String =

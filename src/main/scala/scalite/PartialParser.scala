@@ -13,6 +13,18 @@ import scala.collection.mutable.ListBuffer
  */
 trait PartialParsers extends Parsers with Scanners { t =>
 
+  val modifierFor: PartialFunction[Int, PartialParser => Int] = {
+    case CLASS | TRAIT => _.classHeader
+    case OBJECT => _.objectHeader
+    case DEF =>
+      println("MODIFIER FOR DEF")
+      _.defHeader
+    case IF | WHILE => _.ifWhileHeader
+    case FOR => _.forHeader
+    case VAL | VAR => _.valVarHeader
+    case MATCH => _ => 1
+  }
+
   class PartialParser(inputDontUseMe: Iterator[ScannerData]) extends SourceFileParser(null) {
     val global = t.global
     var index = 0
@@ -28,11 +40,6 @@ trait PartialParsers extends Parsers with Scanners { t =>
       }
     }
 
-    def declHeader = {
-      index = 0
-      val d = tmplDef(0, modifiers())
-      index
-    }
     import treeBuilder.{global => _, _}
 
     def valVarHeader = {
@@ -80,9 +87,9 @@ trait PartialParsers extends Parsers with Scanners { t =>
     def forHeader = {
       index = 0
       in.nextToken()
-      val enums =
-        if (in.token == LBRACE) inBracesOrNil(enumerators())
-        else inParensOrNil(enumerators())
+
+      if (in.token == LBRACE) inBracesOrNil(enumerators())
+      else inParensOrNil(enumerators())
       newLinesOpt()
       if (in.token == YIELD) {
         in.nextToken()
@@ -112,7 +119,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
       val name = ident()
 
       val contextBoundBuf = new ListBuffer[t.global.Tree]
-      val tparams = typeParamClauseOpt(name, contextBoundBuf)
+      typeParamClauseOpt(name, contextBoundBuf)
       if (!isTrait){
         accessModifierOpt()
         paramClauses(name, classContextBounds, ofCaseClass = isCase)
