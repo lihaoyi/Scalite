@@ -20,10 +20,8 @@ class Tests extends FreeSpec{
     "assignments" in make("scalite.messy.Assignments")
     "ifelsewhile" in make("scalite.messy.IfElseWhile")
     "for" in make("scalite.simple.For")
-//    "match" in make("scalite.simple.Match")
-
   }
-
+  "transformer" in make("scalite.TransformerX")
 }
 
 
