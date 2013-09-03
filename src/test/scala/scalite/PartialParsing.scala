@@ -23,24 +23,6 @@ class PartialParsing extends FreeSpec{
     ))
   }
 
-//  "class trait object" in {
-//    def check(s: String, n: Int) = assert(parsePartial(_.declHeader, s) === n)
-//
-//    check("class X", 2)
-//    check("class X[T]", 5)
-//    check("class X{ val x = 1 }", 2)
-//    check("class X extends Y{ val x = 1 }", 4)
-//    check("class X[T](val x: Int = 10) extends Y(x){ val x = 1 }", 18)
-//
-//    check("class \n\n\nX    [\n\nT\n](val x:\n\n Int =\n 10\n\n) extends Y(x\n\n){ val x = 1 }", 18)
-//
-//    check("object XYZ{ val x = 1}", 2)
-//
-//    check("trait XYZ[T] extends Cow { self =>  val x = 1}", 7)
-//
-//    check("case object X", 2)
-//    check("case class X()", 4)
-//  }
   "object" in {
     def check(s: String, n: Int) = assert(parsePartial(_.objectHeader, s) === n)
     check("object X", 2)

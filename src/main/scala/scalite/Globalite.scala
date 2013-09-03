@@ -7,6 +7,11 @@ import scala.collection.mutable
 import scala.language.postfixOps
 import scala.tools.nsc.reporters.Reporter
 
+/**
+ * A modified instance of global which lets us intercept the compilation
+ * process after the Scanner. This lets us perform a transformation on the
+ * stream of tokens before handing it over to the parser to build ASTs
+ */
 class Globalite(settings: Settings, reporter: Reporter) extends Global(settings, reporter){ g =>
   override lazy val syntaxAnalyzer = new {
   val global: g.type = g
