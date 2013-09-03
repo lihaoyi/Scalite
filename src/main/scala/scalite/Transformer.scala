@@ -8,6 +8,7 @@ import scala.reflect.internal.{ModifierFlags, Trees}
 import scala.collection.mutable.ListBuffer
 
 
+
 trait Transformer extends Parsers with Scanners { t =>
   implicit class pimpedToken(td: TokenData){
     def pos(implicit source: SourceFile) = source.position(td.offset)
@@ -150,6 +151,7 @@ trait Transformer extends Parsers with Scanners { t =>
       }
       index
     }
+
     def ifWhileHeader = {
       index = 0
       in.nextToken()
@@ -171,6 +173,40 @@ trait Transformer extends Parsers with Scanners { t =>
     }
 
 
+    def objectHeader = {
+      index = 0
+      in.nextToken()
+      val name = ident()
+
+      if (in.token == EXTENDS) {
+        in.nextToken()
+        templateParents()
+      }
+
+      index
+    }
+
+    def classHeader = {
+      index = 0
+      val isTrait = in.token == TRAIT
+      val isCase = in.token == CASECLASS
+      in.nextToken()
+      val name = ident()
+
+      val contextBoundBuf = new ListBuffer[t.global.Tree]
+      val tparams = typeParamClauseOpt(name, contextBoundBuf)
+      if (!isTrait){
+        accessModifierOpt()
+        paramClauses(name, classContextBounds, ofCaseClass = isCase)
+      }
+
+      constructorAnnotations()
+      if (in.token == EXTENDS) {
+        in.nextToken()
+        templateParents()
+      }
+      index
+    }
     def parseAll = {
       val buff = mutable.Buffer.empty[TokenData]
       do{

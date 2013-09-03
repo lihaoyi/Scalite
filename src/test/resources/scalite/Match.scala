@@ -1,8 +1,9 @@
 package scalite
 
 class Match
+
   def apply(): String =
-    1 match
+    val x = 1 match
       case 1 =>
         println(1)
         "1"

@@ -41,12 +41,28 @@ class PartialParsing extends FreeSpec{
 //    check("case object X", 2)
 //    check("case class X()", 4)
 //  }
+  "object" in {
+    def check(s: String, n: Int) = assert(parsePartial(_.objectHeader, s) === n)
+    check("object X", 2)
+    check("object X extends Cow", 4)
+    check("object X extends Y(1) with Z{ val x = 10 }", 9)
+  }
+
+  "class" in {
+    def check(s: String, n: Int) = assert(parsePartial(_.classHeader, s) === n)
+    check("class X", 2)
+    check("class X{val x = 1}", 2)
+    check("class X[T, U: V](a: A, b: V) extends C(a, b) with D{val x = 1}", 27)
+    check("class \n\nX[T\n,\n\n U:\n\n V](\na\n:\n A,\n\n b:\n\n V) extends \n\nC(a, b) with\n D{val x = 1}", 27)
+    check("trait \n\nX[T\n,\n\n U:\n\n V] extends \n\nC with\n D{val x = 1}", 13)
+
+  }
 
   "defs" in {
     def check(s: String, n: Int) = assert(parsePartial(_.defHeader, s) === n)
     check("def x = 10", 3)
     check("def x[T](a: Int, b: String): T = 10", 17)
-    check("def\n x[\n\nT\n](a\n\n: Int\n, \nb: String)\n\n: T \n= 10", 17)
+    check("def\n x[\n\nT\n](a\n\n: Int\n, \nb: String)\n\n: T \n= {x; y; 10}", 17)
   }
 
   "val var" in {
