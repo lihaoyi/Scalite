@@ -14,4 +14,3 @@ class Assignments
 
   def apply() =
     x + a
-

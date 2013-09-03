@@ -8,4 +8,3 @@ class For
       val k = j + 1
       x += k
     x
-

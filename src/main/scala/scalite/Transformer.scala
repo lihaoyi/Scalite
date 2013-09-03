@@ -57,10 +57,18 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       val curr = input(i)
       println(i + "\tloop\t" + stack.top + "\t" + curr.col + "\t" + token2string(curr.token))
 
-      for(next <- nextLineToken(i)){
-        while(input(next).col < stack.top){
-          insertions(i) = RBrace :: insertions(i)
+      if (input(i).token == Tokens.EOF){
+        println("==================EOF======================")
+        while(1 < stack.top){
+          insertions(i-1) = RBrace :: insertions(i-1)
           println{"POP STACK " + stack.pop()}
+        }
+      }else {
+        for(next <- nextLineToken(i)){
+          while(input(next).col < stack.top){
+            insertions(i) = RBrace :: insertions(i)
+            println{"POP STACK " + stack.pop()}
+          }
         }
       }
 
