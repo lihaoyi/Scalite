@@ -11,11 +11,10 @@ class For                                           class For{
          val j = i * 2                                    val j = i * 2
          val k = j + 1                                    val k = j + 1
          x += k                                           x += k
-      "Hello World" + x                                 }
-                                                        "Hello World" + x
+                                                        }
+      "Hello World" + x                                 "Hello World" + x
                                                       }
                                                     }
-
 ```
 
 **Scalite** is an experimental whitespace-delimited syntax for the scala programming language. This lets you delimit block scope using indentation rather than curly braces, reducing the amount of unnecessary curly braces within the source code. This is an important step in view of the great curly-brace shortage of 2007.

@@ -1,8 +1,6 @@
+
 package scalite
-import collection.mutable
-import scala.tools.nsc.ast.parser.{Scanners, Tokens}
-import scala.tools.nsc.ast.parser.Tokens._
-import scala.reflect.internal.util.SourceFile
+import scala.tools.nsc.ast.parser.Scanners
 
 class TransformerX
    def apply() = "10"
@@ -29,8 +27,8 @@ trait TransformerY extends Scanners
    def lineify(input: Seq[TokenData])(implicit source: SourceFile): mutable.Buffer[mutable.Buffer[TokenData]] =
       val lines = mutable.Buffer.empty[mutable.Buffer[TokenData]]
       var currentLine = 0
-      for(token <- input)
-         if(token.line > currentLine && token.token != Tokens.NEWLINE && token.token != Tokens.NEWLINES)
+      for token <- input
+         if token.line > currentLine && token.token != Tokens.NEWLINE && token.token != Tokens.NEWLINES
 
             lines.append(mutable.Buffer())
             currentLine = token.line
@@ -42,12 +40,12 @@ trait TransformerY extends Scanners
    def insertBraces(lines: mutable.Buffer[mutable.Buffer[TokenData]])(implicit source: SourceFile) =
       val stack = mutable.Stack[Int](1)
 
-      for (i <- 0 until lines.length - 1)
+      for i <- 0 until lines.length - 1
          val line = lines(i)
          val next = lines(i+1)
 
-         while(next.head.col < stack.top)
-            for (token <- Seq(Tokens.RBRACE))
+         while next.head.col < stack.top
+            for token <- Seq(Tokens.RBRACE)
                val td = new TokenData{}
                td.copyFrom(line.head)
                td.token = token
@@ -58,7 +56,7 @@ trait TransformerY extends Scanners
 
             stack.pop()
 
-         if (line.head.col < next.head.col)
+         if line.head.col < next.head.col
             line.last.token match
                case Tokens.NEWLINE | Tokens.NEWLINES =>
                   stack.push(next.head.col)

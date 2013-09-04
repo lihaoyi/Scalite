@@ -8,3 +8,5 @@ class MultiDef
       10
 
 
+object Cow
+  val x = 1
