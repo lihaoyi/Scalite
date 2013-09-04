@@ -1,10 +1,18 @@
 package scalite
 
 import collection.mutable
-import scala.tools.nsc.ast.parser.{Parsers, Scanners, Tokens}
+import scala.tools.nsc.ast.parser.{Parsers, Scanners}
 import scala.tools.nsc.ast.parser.Tokens._
-import scala.reflect.internal.util.SourceFile
 import scala.collection.mutable.ListBuffer
+
+sealed trait Insert
+object Insert{
+  case class LBraceStack(var baseIndent: Int = 0) extends Insert
+  case object RBrace extends Insert
+  case object LBrace extends Insert
+  case object RParen extends Insert
+  case object LParen extends Insert
+}
 
 /**
  * Contains the ad-hoc parsing logic required to parse the various forms
@@ -13,16 +21,16 @@ import scala.collection.mutable.ListBuffer
  */
 trait PartialParsers extends Parsers with Scanners { t =>
 
-  val modifierFor: PartialFunction[Int, PartialParser => Int] = {
-    case CLASS | TRAIT => _.classHeader
-    case OBJECT => _.objectHeader
-    case DEF =>
-      println("MODIFIER FOR DEF")
-      _.defHeader
-    case IF | WHILE => _.ifWhileHeader
-    case FOR => _.forHeader
-    case VAL | VAR => _.valVarHeader
-    case MATCH => _ => 1
+  val modifierFor: PartialFunction[Stream[Int], PartialParser => Seq[(Int, Insert)]] = {
+    case (CLASS | TRAIT) #:: _            => _.classHeader
+    case OBJECT #:: _                     => _.objectHeader
+    case DEF #:: _                        => _.defHeader
+    case (IF | WHILE) #:: LPAREN #:: _    => _.ifWhileHeader
+    case (IF | WHILE) #:: _               => _.ifWhileLiteHeader
+    case FOR #:: (LPAREN | LBRACE) #:: _  => _.forHeader
+    case FOR #:: _                        => _.forLiteHeader
+    case (VAL | VAR) #:: _                => _.valVarHeader
+    case MATCH #:: _                      => _ => Seq(1 -> Insert.LBraceStack())
   }
 
   class PartialParser(inputDontUseMe: Iterator[ScannerData]) extends SourceFileParser(null) {
@@ -48,7 +56,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
       val lhs = commaSeparated(stripParens(noSeq.pattern2()))
       val tp = typedOpt()
       accept(EQUALS)
-      index
+      Seq(index -> Insert.LBraceStack())
     }
 
     private var classContextBounds: List[t.global.Tree] = Nil
@@ -74,14 +82,29 @@ trait PartialParsers extends Parsers with Scanners { t =>
         typedOpt()
         accept(EQUALS)
       }
-      index
+      Seq(index -> Insert.LBraceStack())
     }
 
     def ifWhileHeader = {
       index = 0
       in.nextToken()
       condExpr()
-      index
+      Seq(index -> Insert.LBraceStack())
+    }
+
+    def ifWhileLiteHeader = {
+      index = 0
+      println("ifWhileLite " + index)
+
+      in.nextToken()
+      val startIndex = index
+      expr()
+      println("ifWhileLite done " + index)
+      Seq(
+        startIndex -> Insert.LParen,
+        index -> Insert.RParen,
+        index -> Insert.LBraceStack()
+      )
     }
 
     def forHeader = {
@@ -94,7 +117,25 @@ trait PartialParsers extends Parsers with Scanners { t =>
       if (in.token == YIELD) {
         in.nextToken()
       }
-      index
+      Seq(index -> Insert.LBraceStack())
+    }
+    def forLiteHeader = {
+      index = 0
+
+      in.nextToken()
+      val startIndex = index
+
+      generator(new ListBuffer[Enumerator], eqOK = false)
+      val endIndex = index
+      newLinesOpt()
+      if (in.token == YIELD) {
+        in.nextToken()
+      }
+      Seq(
+        startIndex -> Insert.LBrace,
+        endIndex -> Insert.RBrace,
+        index -> Insert.LBraceStack()
+      )
     }
 
 
@@ -108,7 +149,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
         templateParents()
       }
 
-      index
+      Seq(index -> Insert.LBraceStack())
     }
 
     def classHeader = {
@@ -130,7 +171,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
         in.nextToken()
         templateParents()
       }
-      index
+      Seq(index -> Insert.LBraceStack())
     }
     def parseAll = {
       val buff = mutable.Buffer.empty[TokenData]

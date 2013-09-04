@@ -2,10 +2,8 @@ package scalite
 import collection.mutable
 import scala.tools.nsc.ast.parser.{Parsers, Scanners, Tokens}
 import scala.reflect.internal.util.SourceFile
+import scalite.Insert._
 
-sealed trait Insertion
-case class LBrace(baseIndent: Int) extends Insertion
-case object RBrace extends Insertion
 /**
  * Performs transformations on the Scanner's token stream inside the
  * scala compiler
@@ -35,7 +33,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       arr
     }
 
-    val insertions = mutable.Seq.fill[List[Insertion]](input.length)(Nil)
+    val insertions = mutable.Seq.fill[List[Insert]](input.length)(Nil)
     println("tokens")
 
     input.groupBy(_.line)
@@ -73,36 +71,50 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       }
 
       for{
-        f <- modifierFor.lift(input(i).token)
-        offset = f(new PartialParser(input.toIterator.drop(i)))
-
-        last = input(i + offset)
-        next <- nextLineToken(i + offset - 1)
+        f <- modifierFor.lift(input.toStream.drop(i).map(_.token))
+        tokens = f(new PartialParser(input.toIterator.drop(i)))
+        last = input(i + tokens.last._1)
+        next <- nextLineToken(i + tokens.last._1 - 1)
         if input(next).line > input(i).line
         if input(next).col > colForLine(input(i).line)
+        (offset, token) <- tokens
       }{
-        insertions(i + offset - 1) ::= LBrace(input(next).col)
+        token match{
+          case t: LBraceStack => t.baseIndent = input(next).col
+          case _ =>
+        }
+        insertions(i + offset - 1) ::= token
       }
 
-      insertions(i).collect{case LBrace(baseIndent) =>
-        println("PUSH STACK " + baseIndent)
+      insertions(i).collect{case LBraceStack(baseIndent) =>
         stack.push(baseIndent)
       }
     }
-
+    insertions.foreach(println)
     val merged = mutable.Buffer.empty[ScannerData]
     for(i <- 0 until input.length){
       merged.append(input(i))
-      insertions(i).foreach{
-        case LBrace(baseIndent) =>
+      insertions(i).reverse.foreach{
+        case LBraceStack(_) | LBrace =>
           val td = new ScannerData{}
           td.copyFrom(merged.last)
           td.token = Tokens.LBRACE
           merged.append(td)
+
         case RBrace =>
           val td = new ScannerData{}
           td.copyFrom(merged.last)
           td.token = Tokens.RBRACE
+          merged.append(td)
+        case RParen =>
+          val td = new ScannerData{}
+          td.copyFrom(merged.last)
+          td.token = Tokens.RPAREN
+          merged.append(td)
+        case LParen =>
+          val td = new ScannerData{}
+          td.copyFrom(merged.last)
+          td.token = Tokens.LPAREN
           merged.append(td)
       }
     }
