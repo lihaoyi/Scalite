@@ -4,13 +4,16 @@ name := "scalite"
 
 version       := "0.1"
 
-scalaVersion  := "2.11.0-M4"
+scalaVersion  := "2.11.0"
 
 libraryDependencies ++= Seq(
-  "org.scalatest" % "scalatest_2.11.0-M4" % "2.0.M6-SNAP35",
-  "org.scala-lang" % "scala-compiler" % "2.11.0-M4"
+  "com.lihaoyi" %% "utest" % "0.1.4",
+  "com.lihaoyi" %% "utest-runner" % "0.1.4",
+  "org.scala-lang" % "scala-compiler" % scalaVersion.value
 )
 
-unmanagedSourceDirectories in Test <+= baseDirectory(_ / "src" / "test" / "resources")
+testFrameworks += new TestFramework("utest.runner.JvmFramework")
+
+//unmanagedSourceDirectories in Test <+= baseDirectory(_ / "src" / "test" / "resources")
 
 

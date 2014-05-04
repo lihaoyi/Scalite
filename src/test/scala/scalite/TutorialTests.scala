@@ -1,16 +1,13 @@
 package scalite
+import utest._
 
-import org.scalatest._
-
-
-class TutorialTests extends FreeSpec{
+class TutorialTests extends TestSuite{
   import TestUtils._
-
-  "simple" - {
-    "class" in make("scalite.Tutorial.Classes")
-
+  val tests = TestSuite{
+    'simple{
+      'classes-make("scalite.Tutorial.Classes")
+    }
   }
-
 }
 
 

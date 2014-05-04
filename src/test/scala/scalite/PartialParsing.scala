@@ -1,6 +1,6 @@
 package scalite
 
-import org.scalatest._
+import utest._
 import scala.tools.nsc.reporters.ConsoleReporter
 import scala.tools.nsc.Settings
 import scala.reflect.internal.util.{BatchSourceFile, SourceFile}
@@ -8,77 +8,63 @@ import scala.reflect.io.VirtualFile
 import scala.tools.nsc.ast.parser.Tokens
 
 
-class PartialParsing extends FreeSpec{
+class PartialParsing extends TestSuite{
   import TestUtils._
 
-  /*"parsing" in {
-    import Tokens._
+  val tests = TestSuite{
+    'objects{
+      def check(s: String, n: Int) = assert(parsePartial(_.objectHeader, s) == n)
+      check("object X", 2)
+      check("object X extends Cow", 4)
+      check("object X extends Y(1) with Z{ val x = 10 }", 9)
+    }
 
-    assert(parsePartial(_.parseAll, "class X").map(_.token) === Seq(CLASS, IDENTIFIER))
-    assert(parsePartial(_.parseAll, "class X[T]{}").map(_.token) === Seq(
-      CLASS, IDENTIFIER, LBRACKET, IDENTIFIER, RBRACKET, LBRACE, RBRACE
-    ))
-    assert(parsePartial(_.parseAll, "if if } } else class object 1 2 3").map(_.token) === Seq(
-      IF, IF, RBRACE, RBRACE, ELSE, CLASS, OBJECT, INTLIT, INTLIT, INTLIT
-    ))
-  }*/
+    'classes{
+      def check(s: String, n: Int) = assert(parsePartial(_.classHeader, s) == n)
+      check("class X", 2)
+      check("class X{val x = 1}", 2)
+      check("class X[T, U: V](a: A, b: V) extends C(a, b) with D{val x = 1}", 27)
+      check("class \n\nX[T\n,\n\n U:\n\n V](\na\n:\n A,\n\n b:\n\n V) extends \n\nC(a, b) with\n D{val x = 1}", 27)
+      check("trait \n\nX[T\n,\n\n U:\n\n V] extends \n\nC with\n D{val x = 1}", 13)
+      check("class X\n", 2)
+    }
 
-  "object" in {
-    def check(s: String, n: Int) = assert(parsePartial(_.objectHeader, s) === n)
-    check("object X", 2)
-    check("object X extends Cow", 4)
-    check("object X extends Y(1) with Z{ val x = 10 }", 9)
-  }
+    'defs{
+      def check(s: String, n: Int) = assert(parsePartial(_.defHeader, s) == n)
+      check("def x = 10", 3)
+      check("def x[T](a: Int, b: String): T = 10", 17)
+      check("def\n x[\n\nT\n](a\n\n: Int\n, \nb: String)\n\n: T \n= {x; y; 10}", 17)
+    }
 
-  "class" in {
-    def check(s: String, n: Int) = assert(parsePartial(_.classHeader, s) === n)
-    check("class X", 2)
-    check("class X{val x = 1}", 2)
-    check("class X[T, U: V](a: A, b: V) extends C(a, b) with D{val x = 1}", 27)
-    check("class \n\nX[T\n,\n\n U:\n\n V](\na\n:\n A,\n\n b:\n\n V) extends \n\nC(a, b) with\n D{val x = 1}", 27)
-    check("trait \n\nX[T\n,\n\n U:\n\n V] extends \n\nC with\n D{val x = 1}", 13)
-    check("class X\n", 2)
-  }
+    'valvar{
+      def check(s: String, n: Int) = assert(parsePartial(_.valVarHeader, s) == n)
+      check("val x = 10", 3)
+      check("val (x, y) = (1, 2)", 7)
+      check("val x, y = 3", 5)
+      check("val x, (y, z)\n = \n{3}", 9)
+    }
 
-  "defs" in {
-    def check(s: String, n: Int) = assert(parsePartial(_.defHeader, s) === n)
-    check("def x = 10", 3)
-    check("def x[T](a: Int, b: String): T = 10", 17)
-    check("def\n x[\n\nT\n](a\n\n: Int\n, \nb: String)\n\n: T \n= {x; y; 10}", 17)
-  }
+    'ifelse{
+      def check(s: String, n: Int) = assert(parsePartial(_.ifWhileHeader, s) == n)
+      check("if (true) 1 else 2", 4)
+      check("if \n(true           )\n\n\n 1 else 2", 4)
+      check("while (true == false) 1", 6)
+      check("while \n\n\n(\n\ntrue\n          == false) 1", 6)
+      check("if(if(true) 1 else 2) 1 else 2", 10)
+    }
 
-  "val var" in {
-    def check(s: String, n: Int) = assert(parsePartial(_.valVarHeader, s) === n)
-    check("val x = 10", 3)
-    check("val (x, y) = (1, 2)", 7)
-    check("val x, y = 3", 5)
-    check("val x, (y, z)\n = \n{3}", 9)
-  }
-
-  "if else" in {
-    def check(s: String, n: Int) = assert(parsePartial(_.ifWhileHeader, s) === n)
-    check("if (true) 1 else 2", 4)
-    check("if \n(true           )\n\n\n 1 else 2", 4)
-    check("while (true == false) 1", 6)
-    check("while \n\n\n(\n\ntrue\n          == false) 1", 6)
-    check("if(if(true) 1 else 2) 1 else 2", 10)
-  }
-
-  "for loops" in {
-    def check(s: String, n: Int) = assert(parsePartial(_.forHeader, s) === n)
-    check("for (x <- xs) 1 ", 6)
-    check("for {x <- xs} 1 ", 6)
-    check("for (x <- xs) yield 1 ", 7)
-    check("for (x <- for{y <- z} 1) yield 1 ", 13)
-    check("for \n\n{x <- xs\ny <- ys\n\n} yield 1 ", 11)
-  }
-
-  "test" in {
-
+    'forloops{
+      def check(s: String, n: Int) = assert(parsePartial(_.forHeader, s) == n)
+      check("for (x <- xs) 1 ", 6)
+      check("for {x <- xs} 1 ", 6)
+      check("for (x <- xs) yield 1 ", 7)
+      check("for (x <- for{y <- z} 1) yield 1 ", 13)
+      check("for \n\n{x <- xs\ny <- ys\n\n} yield 1 ", 11)
+    }
   }
 
 
-  def parsePartial[T](f: Transformer#PartialParser => T, s: String) = {
+  def parsePartial[T](f: Transformer#PartialParser => T, s: String):T  = {
     val settings = {
       val s =  new Settings
       //s.Xprint.value = List("all")
