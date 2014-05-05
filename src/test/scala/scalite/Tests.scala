@@ -4,7 +4,7 @@ import utest._
 
 import TestUtils._
 
-class Tests extends TestSuite{
+object Tests extends TestSuite{
   val tests = TestSuite{
     'simple{
       'class-make("scalite.simple.Class")

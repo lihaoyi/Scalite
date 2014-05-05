@@ -94,12 +94,10 @@ trait PartialParsers extends Parsers with Scanners { t =>
 
     def ifWhileLiteHeader = {
       index = 0
-      println("ifWhileLite " + index)
 
       in.nextToken()
       val startIndex = index
       expr()
-      println("ifWhileLite done " + index)
       Seq(
         startIndex -> Insert.LParen,
         index -> Insert.RParen,

@@ -14,6 +14,6 @@ libraryDependencies ++= Seq(
 
 testFrameworks += new TestFramework("utest.runner.JvmFramework")
 
-//unmanagedSourceDirectories in Test <+= baseDirectory(_ / "src" / "test" / "resources")
+(resources in Test) ++=  (managedClasspath in Compile).value.map(_.data)
 
 

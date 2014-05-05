@@ -8,7 +8,7 @@ import scala.reflect.io.VirtualFile
 import scala.tools.nsc.ast.parser.Tokens
 
 
-class PartialParsing extends TestSuite{
+object PartialParsing extends TestSuite{
   import TestUtils._
 
   val tests = TestSuite{
@@ -64,11 +64,11 @@ class PartialParsing extends TestSuite{
   }
 
 
-  def parsePartial[T](f: Transformer#PartialParser => T, s: String):T  = {
+  def parsePartial[T](f: Transformer#PartialParser => T, s: String): T  = {
     val settings = {
       val s =  new Settings
       //s.Xprint.value = List("all")
-      val classPath = getFilePaths("/Runtimes/scala-2.11.0-M4/lib") :+ "target/scala-2.10/classes"
+      val classPath = getFilePaths("target/scala-2.11/test-classes/")
 
       classPath.map(new java.io.File(_).getAbsolutePath).foreach{ f =>
         s.classpath.append(f)
