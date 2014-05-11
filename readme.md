@@ -33,16 +33,17 @@ Syntax
 Scalite blocks are delimited by indentation rather than curly braces. Thus in the following code,
 
 ```scala
-val x =
-    val y = 1
-    val z = 2
-    y + z
-
-var a =
-    1 + 2 + 3
-
-def apply() =
-    x + a // 9
+val x =                                                     val x = {
+    val y = 1                                                 val y = 1
+    val z = 2                                                 val z = 2
+    y + z                                                     y + z
+                                                            }
+var a =                                                     var a = {
+    1 + 2 + 3                                                 1 + 2 + 3
+                                                            }
+def apply() =                                               def apply() = {
+    x + a // 9                                                x + a // 9
+                                                            }
 ```
 
 `y` and `z` are local variables only scoped to the definition of `x`, and not visible outside it. The same rule applies for `for` loops, `if`/`else`/`while`/`do`/`try` blocks. Here's some samples from the unit tests:
@@ -50,50 +51,80 @@ def apply() =
 For loops
 ---------
 ```scala
-var x = 0
-for(i <- 0 until 10)
-    val j = i * 2
-    val k = j + 1
-    x += k
-x // 100
+var x = 0                                                   var x = 0
+for (i <- 0 until 10)                                       for (i <- 0 until 10) {
+    val j = i * 2                                             val j = i * 2
+    val k = j + 1                                             val k = j + 1
+    x += k                                                    x += k
+                                                            }
+x // 100                                                    x // 100
 ```
 While/If/Else
 -------------
 ```scala
-var x = 0
-var y = 0
+var x = 0                                                   var x = 0
+var y = 0                                                   var y = 0
 
-while (x < 10)
-    if (x % 2 == 0)
-        x = x + 1
-        y += x
-    else
-        x = x + 2
-        y += x
-
-y // 36
+while (x < 10)                                              while (x < 10) {
+    if (x % 2 == 0)                                           if (x % 2 == 0) {
+        x = x + 1                                               x = x + 1
+        y += x                                                  y += x
+    else                                                      } else {
+        x = x + 2                                               x = x + 2
+        y += x                                                  y += x
+                                                              }
+                                                            }
+y // 36                                                     y // 36
 ```
 Top-level definitions
 ---------------------
 ```scala
-case object ObjectCase
-    val w = 1
+case object ObjectCase                                      case object ObjectCase {
+    val w = 1                                                   val w = 1
+                                                            }
+object ObjectLol                                            object ObjectLol {
+    val x = 100                                                 val x = 100
+                                                            }
+trait MyTrait                                               trait MyTrait {
+    val y = 10                                                  val y = 10
+                                                            }
+class TopLevel extends MyTrait                              class TopLevel extends MyTrait {
+    def apply(): String =                                     def apply(): String = {
+        val z = 1                                               val z = 1
+        import ObjectLol._                                      import ObjectLol._
+        import ObjectCase._                                     import ObjectCase._
+        "Hello World!" + (a + w + x + y + z)                    "Hello World!" + (a + w + x + y + z)
+        // Hello World!113                                      // Hello World!113
+                                                              }
+    val a = 1                                                 val a = 1
+                                                            }
+```
+Match blocks
+------------
 
-object ObjectLol
-    val x = 100
+Match blocks are similarly indentation delimited, but with a twist: since there isn't any ambiguity between more `case` clauses and statements outside the `match` block, Scalite does not require you to indent the `case` clauses, saving you one level of indentation:
 
-trait MyTrait
-    val y = 10
+```scala
+val z = 1 match                                             val z = 1 match {
+case 1 =>                                                     case 1 =>
+    println("One!")                                             println("One!")
+    "1"                                                         "1"
+case 2 => "2"                                                 case 2 => "2"
+                                                            }
+z // "2"                                                    z // "2"
+```
 
-class TopLevel extends MyTrait
-    def apply(): String =
-        val z = 1
-        import ObjectLol._
-        import ObjectCase._
-        "Hello World!" + (a + w + x + y + z)
-        // Hello World!113
+The same applies to the `catch` block of a try-catch expression:
 
-    val a = 1
+```scala
+try                                                         try {
+    println("Trying...")                                      println("Trying...")
+    x.toString                                                x.toString
+catch                                                       } catch {
+case n: NullPointerException =>                               case n: NullPointerException =>
+    println("Dammit")                                           println("Dammit")
+    "null"                                                      "null"
+                                                            }
 ```
 
 Light syntax
@@ -102,53 +133,29 @@ Light syntax
 In addition to indentation-scoped blocks, `for`/`if`/`while` blocks also support a paren-less syntax if the generators of the `for` or the conditional of the `if` or `while` fit on a single line:
 
 ```scala
-var x = 0
-for i <- 0 until 10
-    val j = i * 2
-    val k = j + 1
-    x += k
-x // 100
+var x = 0                                                   var x = 0
+for i <- 0 until 10                                         for (i <- 0 until 10) {
+    val j = i * 2                                             val j = i * 2
+    val k = j + 1                                             val k = j + 1
+    x += k                                                    x += k
+                                                            }
+x // 100                                                    x // 100
 
-var x = 0
-var y = 0
+var x = 0                                                   var x = 0
+var y = 0                                                   var y = 0
 
-while x < 10
-    if x % 2 == 0
-        x = x + 1
-        y += x
-    else
-        x = x + 2
-        y += x
-
-y // 36
+while x < 10                                                while (x < 10) {
+    if x % 2 == 0                                             if (x % 2 == 0) {
+        x = x + 1                                               x = x + 1
+        y += x                                                  y += x
+    else                                                      } else {
+        x = x + 2                                               x = x + 2
+        y += x                                                  y += x
+                                                              }
+                                                            }
+y // 36                                                     y // 36
 ```
 
-Match blocks
-============
-
-Match blocks are similarly indentation delimited, but with a twist: since there isn't any ambiguity between more `case` clauses and statements outside the `match` block, Scalite does not require you to indent the `case` clauses, saving you one level of indentation:
-
-```scala
-val z = 1 match
-case 1 =>
-    println("One!")
-    "1"
-case 2 => "2"
-
-z // "2"
-```
-
-The same applies to the `catch` block of a try-catch expression:
-
-```scala
-try
-    println("Trying...")
-    x.toString
-catch
-case n: NullPointerException =>
-    println("Dammit")
-    "null"
-```
 
 More?
 =====
