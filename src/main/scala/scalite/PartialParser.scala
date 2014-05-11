@@ -4,6 +4,7 @@ import collection.mutable
 import scala.tools.nsc.ast.parser.{Parsers, Scanners}
 import scala.tools.nsc.ast.parser.Tokens._
 import scala.collection.mutable.ListBuffer
+import scala.reflect.internal.util.SourceFile
 
 sealed trait Insert
 object Insert{
@@ -24,6 +25,13 @@ object Insert{
  * headers of classes, functions, etc.. in the stream of tokens.
  */
 trait PartialParsers extends Parsers with Scanners { t =>
+  implicit class pimpedToken(td: TokenData){
+    def pos(implicit source: SourceFile) = source.position(td.offset)
+    def col(implicit source: SourceFile) = pos.column
+    def line(implicit source: SourceFile) = pos.line
+    def prettyPrint = token2string(td.token)
+  }
+
   import Stream.Empty
   val modifierFor: PartialFunction[Stream[Int], PartialParser => Seq[(Int, Insert)]] = {
     case (CLASS | TRAIT) #:: _                   => _.classHeader
@@ -31,16 +39,17 @@ trait PartialParsers extends Parsers with Scanners { t =>
     case DEF #:: _                               => _.defHeader
     case FOR #:: Empty                           => _ => Seq(1 -> Insert.LBraceDoStack())
     case (IF | WHILE) #:: Empty                  => _ => Seq(1 -> Insert.LParenDoStack())
+    case _ #:: DO #:: Empty                      => _.identBlock
+    case (TRY | ELSE | DO | YIELD) #:: Empty     => _ => Seq(1 -> Insert.LBraceStack())
     case (IF | WHILE) #:: LPAREN #:: _           => _.ifWhileHeader
     case (IF | WHILE) #:: _                      => _.ifWhileLiteHeader
-    case (TRY | ELSE | DO | YIELD) #:: Empty     => _ => Seq(1 -> Insert.LBraceStack())
     case (MATCH | CATCH) #:: Empty               => _ => Seq(1 -> Insert.LBraceCaseStack())
     case FOR #:: (LPAREN | LBRACE) #:: _         => _.forHeader
     case FOR #:: _                               => _.forLiteHeader
     case (VAL | VAR) #:: _                       => _.valVarHeader
   }
 
-  class PartialParser(inputDontUseMe: Iterator[ScannerData]) extends SourceFileParser(null) {
+  class PartialParser(inputDontUseMe: Iterator[ScannerData], colForLine: Seq[Int])(implicit source: SourceFile) extends SourceFileParser(null) {
     val global = t.global
     var index = 0
 
@@ -57,7 +66,19 @@ trait PartialParsers extends Parsers with Scanners { t =>
 
     import treeBuilder.{global => _, _}
 
+    def identBlock = {
+      println("IDENT BLOCK")
 
+      index = 0
+      in.nextToken()
+      val (cLine, cToken) = (in.line, in.token)
+      in.nextToken()
+      val (nLine, nToken) = (in.line, in.token)
+      if (nLine > cLine && colForLine(nLine) > colForLine(cLine)) {
+        Seq(1 -> Insert.DeleteDo, 2 -> Insert.LBraceStack())
+      }
+      else Nil
+    }
     def valVarHeader = {
       index = 0
       in.nextToken()

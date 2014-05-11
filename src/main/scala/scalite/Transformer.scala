@@ -9,12 +9,7 @@ import scalite.Insert._
  * scala compiler
  */
 trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
-  implicit class pimpedToken(td: ScannerData){
-    def pos(implicit source: SourceFile) = source.position(td.offset)
-    def col(implicit source: SourceFile) = pos.column
-    def line(implicit source: SourceFile) = pos.line
-    def prettyPrint = token2string(td.token)
-  }
+
 
   def transform(input: Seq[ScannerData])(implicit source: SourceFile): Seq[ScannerData] = {
 
@@ -73,7 +68,8 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       val stream = input.toStream.drop(i)
       for{
         f <- modifierFor.lift(stream.takeWhile(_.line == stream(0).line).map(_.token))
-        tokens = f(new PartialParser(input.toIterator.drop(i)))
+        tokens = f(new PartialParser(input.toIterator.drop(i), colForLine)(source))
+        _ = println("TOKENS  " + tokens)
         lastOpt <- tokens.lastOption
         last = input(i + lastOpt._1)
         next <- nextLineToken(i + tokens.last._1 - 1)
@@ -88,6 +84,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
           case t: LParenDoStack => t.baseIndent = input(next).col
           case _ =>
         }
+        println("Adding... " + token)
         insertions(i + offset - 1) ::= token
       }
 

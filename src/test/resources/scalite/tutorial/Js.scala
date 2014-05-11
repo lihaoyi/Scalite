@@ -55,7 +55,7 @@ object Json
     case Js.String(s) =>
         sb.append('"')
         var i = 0
-        while(i < s.length)
+        while i < s.length
             s.charAt(i) match
             case '\\' => sb.append("\\\\")
             case '"' => sb.append("\\\"")
@@ -78,13 +78,13 @@ object Json
 
     case Js.Object(kv) =>
         sb.append("{")
-        if (kv.length > 0)
+        if kv.length > 0
             writeToBuffer(Js.String(kv(0)._1), sb)
             sb.append(": ")
             writeToBuffer(kv(0)._2, sb)
 
         var i = 1
-        while(i < kv.length)
+        while i < kv.length
             sb.append(", ")
             writeToBuffer(Js.String(kv(i)._1), sb)
             sb.append(": ")
@@ -97,7 +97,7 @@ object Json
         sb.append("[")
         if (vs.length > 0) writeToBuffer(vs(0), sb)
         var i = 1
-        while(i < vs.length)
+        while i < vs.length
             sb.append(", ")
             writeToBuffer(vs(i), sb)
             i += 1
@@ -158,7 +158,7 @@ object Json
 
         // *** Character => CharKind Map ***
 
-        val charKind = (0 to 255).toArray.map {
+        val charKind = (0 to 255).toArray.map do
             case c if 'a'.toInt <= c && c <= 'z'.toInt => Letter
             case c if 'A'.toInt <= c && c <= 'Z'.toInt => Letter
             case c if '0'.toInt <= c && c <= '9'.toInt => Digit
@@ -176,7 +176,7 @@ object Json
             case '\r' => Blank
             case '/' => Slash
             case _ => Other
-        }
+
 
         // *** Character Escapes
 
@@ -254,7 +254,7 @@ object Json
         def handleDigit() =
             val first = chMark
             getDigits()
-            val k1 = if (ch == '.'.toInt)
+            val k1 = if ch == '.'.toInt
                 chNext()
                 getDigits()
                 BIGNUMBER
@@ -263,9 +263,9 @@ object Json
 
             val k2 = if (ch == 'E'.toInt || ch == 'e'.toInt)
                 chNext()
-                if (ch == '+'.toInt)
+                if ch == '+'.toInt
                     chNext()
-                else if (ch == '-'.toInt)
+                else if ch == '-'.toInt
                     chNext()
 
                 getDigits()
@@ -312,7 +312,9 @@ object Json
                 kind match
                 case Letter =>
                   val first = chMark
-                  while (chKind == Letter || chKind == Digit)
+                  while
+                      chKind == Letter || chKind == Digit
+                  do
                       chNext()
 
                   tokenKind = ID
@@ -328,8 +330,8 @@ object Json
                     val sb = new StringBuilder(50)
                     chNext()
                     var first = chMark
-                    while (ch != '"'.toInt && ch >= 32)
-                        if (ch == '\\'.toInt)
+                    while ch != '"'.toInt && ch >= 32
+                        if ch == '\\'.toInt
                             sb.append(chSubstr(first))
                             chNext()
                             escapeMap.get(ch) match
@@ -341,7 +343,7 @@ object Json
                                 if (ch != 'u'.toInt) chError("Illegal escape")
                                 chNext()
                                 var code = 0
-                                for (i <- 1 to 4)
+                                for i <- 1 to 4
                                     val ch1 = ch.toChar.toString
                                     val i = "0123456789abcdef".indexOf(ch1.toLowerCase)
                                     if (i == -1) chError("Illegal hex character")
@@ -404,7 +406,7 @@ object Json
         def handleArray(): Js.Array =
             tokenNext()
             var result = List.empty[Js.Value]
-            while (tokenKind != RARR)
+            while tokenKind != RARR
                 result = getJson() :: result
                 tokenKind match
                 case COMMA => tokenNext()

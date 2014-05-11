@@ -50,6 +50,7 @@ abstract class SyntaxAnalyzerLite extends SyntaxAnalyzer with Transformer{
     }
   }
   class UnitParserX(unit: global.CompilationUnit, patches: List[BracePatch] = Nil) extends UnitParser(unit, patches){
+
     override def newScanner() = new UnitScannerX(unit, patches)
     override def withPatches(patches: List[BracePatch]): UnitParser = new UnitParserX(unit, patches)
   }

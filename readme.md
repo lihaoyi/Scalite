@@ -155,7 +155,7 @@ case n: NullPointerException =>                               case n: NullPointe
 ```
 
 Light syntax
-============
+------------
 
 In addition to indentation-scoped blocks, `for`/`if`/`while` blocks also support a paren-less syntax if the generators of the `for` or the conditional of the `if` or `while` fit on a single line:
 
@@ -191,8 +191,30 @@ y                                                           y
 // 36                                                       // 36
 ```
 
+Custom Blocks
+-------------
+
+You can use whitespace-delimited blocks for your own functions too, and not just for built-in control flow constructs, using the `do` keyword:
+```scala
+val xs = 0 until 10                                         val xs = 0 until 10
+val ys = xs.map do                                          val ys = xs.map{
+  x => x + 1                                                  x => x + 1
+                                                            }
+ys.sum                                                      ys.sum
+// 55                                                       // 55
+
+val zs = xs.map do                                          val zs = xs.map{
+    case 1 => 1                                               case 1 => 1
+    case 2 => 2                                               case 2 => 2
+    case x if x % 2 == 0 => x + 1                             case x if x % 2 == 0 => x + 1
+    case x if x % 2 != 0 => x - 1                             case x if x % 2 != 0 => x - 1
+                                                            }
+zs.sum                                                      zs.sum
+// 45                                                       // 45
+```
+
 Tall Headers
-==============
+------------
 
 Scalite supports spreading out the header of a for-loop over multiple lines:
 

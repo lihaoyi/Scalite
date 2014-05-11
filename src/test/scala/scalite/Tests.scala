@@ -30,7 +30,7 @@ object Tests extends TestSuite{
       'abstract-make("scalite.medium.Abstract", 111111)
       'params-make("scalite.medium.Params", 11111)
       'matching-make("scalite.medium.Matching", 1)
-
+      'identblock-make("scalite.medium.IdentBlock", "55 45")
     }
     'long{
       'for-make("scalite.long.For", "165 25")
