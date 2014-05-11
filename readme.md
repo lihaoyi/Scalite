@@ -4,7 +4,7 @@ Scalite
 ```scala
 package scalite.tutorial                                    package scalite.tutorial
 
-class Point(xc: Int, yc: Int)                               class Point(xc: Int, yc: Int){
+class Point(xc: Int, yc: Int)                               class Point(xc: Int, yc: Int) {
     var x: Int = xc                                           var x: Int = xc
     var y: Int = yc                                           var y: Int = yc
     def move(dx: Int, dy: Int) =                              def move(dx: Int, dy: Int) = {
@@ -15,7 +15,7 @@ class Point(xc: Int, yc: Int)                               class Point(xc: Int,
         "(" + x + ", " + y + ")"                                "(" + x + ", " + y + ")"
                                                               }
                                                             }
-object Run                                                  object Run{
+object Run                                                  object Run {
     def apply() =                                             def apply() = {
         val pt = new Point(1, 2)                                val pt = new Point(1, 2)
         println(pt)                                             println(pt)
