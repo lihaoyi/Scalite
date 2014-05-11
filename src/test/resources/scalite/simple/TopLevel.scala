@@ -14,6 +14,6 @@ class TopLevel extends MyTrait
         val z = 1
         import ObjectLol._
         import ObjectCase._
-        "Hello World!" + (w + x + y + z)
+        "Hello World!" + (a + w + x + y + z)
 
-
+    def a = 1

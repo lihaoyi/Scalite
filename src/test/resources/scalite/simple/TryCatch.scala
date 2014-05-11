@@ -6,8 +6,8 @@ class TryCatch
             ()
             x.toString
         catch
-            case n: NullPointerException =>
-                "null"
+        case n: NullPointerException =>
+            "null"
 
     def apply() =
         doThing("lol") + doThing(null)

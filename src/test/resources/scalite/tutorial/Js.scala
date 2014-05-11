@@ -1,7 +1,15 @@
 package scalite.tutorial
 
-import scala.annotation.switch
-
+/**
+ * Port of uPickle's JSON parser to Scalite, a lightweight,
+ * tab-delimited syntax for the Scala programming language.
+ * The `Js.apply` entrypoint exercises the entirety of the
+ * JSON parser and serializer to verify that they are
+ * functional.
+ *
+ * Original code:
+ * https://github.com/lihaoyi/upickle/blob/master/shared/main/scala/upickle/Js.scala
+ */
 class Js
     val x = Json.read("""[1, {"omg" : true}]""")
     def apply() =

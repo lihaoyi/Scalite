@@ -16,7 +16,7 @@ object Tests extends TestSuite{
       'forlite-make("scalite.simple.ForLite", 100)
       'match-make("scalite.simple.Match", "1")
       'multidef-make("scalite.simple.MultiDef", "Hello World!10")
-      'toplevel-make("scalite.simple.TopLevel", "Hello World!112")
+      'toplevel-make("scalite.simple.TopLevel", "Hello World!113")
       'trycatch-make("scalite.simple.TryCatch", "lolnull")
     }
     'messy{
