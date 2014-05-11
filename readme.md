@@ -172,6 +172,6 @@ A more robust solution would be to fork the Scala compiler's recursive-descent p
 
 Scalite is implemented as a custom `Global` rather than as a compiler plugin, because the Scala compiler architecture does not allow compiler plugins to replace the lexing-and-parsing phase of the compilation pipeline. This makes it difficult to bundle up and re-use in other projects. Nevertheless, there is a moderately large suite of unit tests which uses this custom `Global` to programmatically compile chunks of code and executes them to ensure they behave as expected.
 
-Scalite is the culmination of about 30 hours of work, and isn't ready to be used for anything at all. The semantics are full of bugs, and the implementation is a rats nest of complexity, but *it works*, and hopefully will inspire or convince someone else that a whitespace-based syntax is something worth trying out.
+Scalite is the culmination of about 30 hours of work, and isn't ready to be used for anything at all. The semantics are full of bugs, and the implementation is a rats nest of complexity, but *it works*, and hopefully will inspire or convince someone somewhere that a whitespace-based syntax is something worth trying out.
 
 
