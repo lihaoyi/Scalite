@@ -2,27 +2,27 @@ Scalite
 =======
 
 ```scala
-package scalite.tutorial                            package scalite.tutorial
+package scalite.tutorial                                    package scalite.tutorial
 
-class Point(xc: Int, yc: Int)                       class Point(xc: Int, yc: Int){
-    var x: Int = xc                                   var x: Int = xc
-    var y: Int = yc                                   var y: Int = yc
-    def move(dx: Int, dy: Int) =                      def move(dx: Int, dy: Int) =
-        x = x + dx                                      x = x + dx
-        y = y + dy                                      y = y + dy
-                                                      }
-    override def toString() =                         override def toString() = {
-        "(" + x + ", " + y + ")"                        "(" + x + ", " + y + ")"
-                                                      }
-                                                    }
-object Run                                          object Run{
-    def apply() =                                     def apply() = {
-        val pt = new Point(1, 2)                        val pt = new Point(1, 2)
-        println(pt)                                     println(pt)
-        pt.move(10, 10)                                 pt.move(10, 10)
-        pt.x                                            pt.x
-                                                      }
-                                                    }
+class Point(xc: Int, yc: Int)                               class Point(xc: Int, yc: Int){
+    var x: Int = xc                                           var x: Int = xc
+    var y: Int = yc                                           var y: Int = yc
+    def move(dx: Int, dy: Int) =                              def move(dx: Int, dy: Int) = {
+        x = x + dx                                              x = x + dx
+        y = y + dy                                              y = y + dy
+                                                              }
+    override def toString() =                                 override def toString() = {
+        "(" + x + ", " + y + ")"                                "(" + x + ", " + y + ")"
+                                                              }
+                                                            }
+object Run                                                  object Run{
+    def apply() =                                             def apply() = {
+        val pt = new Point(1, 2)                                val pt = new Point(1, 2)
+        println(pt)                                             println(pt)
+        pt.move(10, 10)                                         pt.move(10, 10)
+        pt.x                                                    pt.x
+                                                              }
+                                                            }
 ```
 
 **Scalite** is an experimental whitespace-delimited syntax for the scala programming language. This lets you delimit block scope using indentation rather than curly braces, reducing the amount of unnecessary curly braces within the source code. This is an important step in view of the great curly-brace shortage of 2007.
