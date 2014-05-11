@@ -55,15 +55,14 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       val curr = input(i)
       println(i + "\tloop\t" + stack.top + "\t" + curr.col + "\t" + token2string(curr.token))
 
-
       if (input(i).token == Tokens.EOF){
         while(stack.length > 1){
           insertions(i-1) ::= RBrace
           println{"POP STACK " + stack.pop()}
         }
       }else {
-        for(next <- nextLineToken(i)){
-          while(input(next).col < stack.top){
+        for(next <- nextLineToken(i)) {
+          if (input(next).token != Tokens.CASE) while(input(next).col < stack.top) {
             insertions(i) ::= RBrace
             println{"POP STACK " + stack.pop()}
           }
@@ -77,18 +76,20 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
         last = input(i + lastOpt._1)
         next <- nextLineToken(i + tokens.last._1 - 1)
         if input(next).line > input(i).line
-        if input(next).col > colForLine(input(i).line)
+        if input(next).col > colForLine(input(i).line) || input(next).token == Tokens.CASE
         (offset, token) <- tokens
       }{
         token match{
           case t: LBraceStack => t.baseIndent = input(next).col
+          case t: LBraceCaseStack => t.baseIndent = input(next).col
           case _ =>
         }
         insertions(i + offset - 1) ::= token
       }
 
-      insertions(i).collect{case LBraceStack(baseIndent) =>
-        stack.push(baseIndent)
+      insertions(i).collect{
+        case LBraceStack(baseIndent) => stack.push(baseIndent)
+        case LBraceCaseStack(baseIndent) => stack.push(baseIndent + 1)
       }
     }
     insertions.foreach(println)
@@ -96,7 +97,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
     for(i <- 0 until input.length){
       merged.append(input(i))
       insertions(i).reverse.foreach{
-        case LBraceStack(_) | LBrace =>
+        case LBraceCaseStack(_) | LBraceStack(_) | LBrace =>
           val td = new ScannerData{}
           td.copyFrom(merged.last)
           td.token = Tokens.LBRACE

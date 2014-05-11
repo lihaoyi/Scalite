@@ -44,60 +44,61 @@ object Js
 
 object Json
     def writeToBuffer(v: Js.Value, sb: StringBuffer): Unit = v match
-        case Js.String(s) =>
-            sb.append('"')
-            var i = 0
-            while(i < s.length) s.charAt(i) match
-                case '\\' => sb.append("\\\\")
-                case '"' => sb.append("\\\"")
-                case '/' => sb.append("\\/")
-                case '\b' => sb.append("\\b")
-                case '\t' => sb.append("\\t")
-                case '\n' => sb.append("\\n")
-                case '\f' => sb.append("\\f")
-                case '\r' => sb.append("\\r")
-                case c =>
-                    if (c < ' ')
-                        val t = "000" + Integer.toHexString(c)
-                        sb.append("\\u" + t.takeRight(4))
-                    else
-                        sb.append(c.toString)
+    case Js.String(s) =>
+        sb.append('"')
+        var i = 0
+        while(i < s.length)
+            s.charAt(i) match
+            case '\\' => sb.append("\\\\")
+            case '"' => sb.append("\\\"")
+            case '/' => sb.append("\\/")
+            case '\b' => sb.append("\\b")
+            case '\t' => sb.append("\\t")
+            case '\n' => sb.append("\\n")
+            case '\f' => sb.append("\\f")
+            case '\r' => sb.append("\\r")
+            case c =>
+                if (c < ' ')
+                    val t = "000" + Integer.toHexString(c)
+                    sb.append("\\u" + t.takeRight(4))
+                else
+                    sb.append(c.toString)
 
+            i += 1
 
-                i += 1
+        sb.append('"')
 
-            sb.append('"')
-        case Js.Object(kv) =>
-            sb.append("{")
-            if (kv.length > 0)
-                writeToBuffer(Js.String(kv(0)._1), sb)
-                sb.append(": ")
-                writeToBuffer(kv(0)._2, sb)
+    case Js.Object(kv) =>
+        sb.append("{")
+        if (kv.length > 0)
+            writeToBuffer(Js.String(kv(0)._1), sb)
+            sb.append(": ")
+            writeToBuffer(kv(0)._2, sb)
 
-            var i = 1
-            while(i < kv.length)
-                sb.append(", ")
-                writeToBuffer(Js.String(kv(i)._1), sb)
-                sb.append(": ")
-                writeToBuffer(kv(i)._2, sb)
-                i += 1
+        var i = 1
+        while(i < kv.length)
+            sb.append(", ")
+            writeToBuffer(Js.String(kv(i)._1), sb)
+            sb.append(": ")
+            writeToBuffer(kv(i)._2, sb)
+            i += 1
 
-            sb.append("}")
+        sb.append("}")
 
-        case Js.Array(vs) =>
-            sb.append("[")
-            if (vs.length > 0) writeToBuffer(vs(0), sb)
-            var i = 1
-            while(i < vs.length)
-                sb.append(", ")
-                writeToBuffer(vs(i), sb)
-                i += 1
+    case Js.Array(vs) =>
+        sb.append("[")
+        if (vs.length > 0) writeToBuffer(vs(0), sb)
+        var i = 1
+        while(i < vs.length)
+            sb.append(", ")
+            writeToBuffer(vs(i), sb)
+            i += 1
 
-            sb.append("]")
-        case Js.Number(d) => sb.append(d)
-        case Js.False => sb.append("false")
-        case Js.True => sb.append("true")
-        case Js.Null => sb.append("null")
+        sb.append("]")
+    case Js.Number(d) => sb.append(d)
+    case Js.False => sb.append("false")
+    case Js.True => sb.append("true")
+    case Js.Null => sb.append("null")
 
     def write(v: Js.Value): String =
         val sb = new StringBuffer()
@@ -214,11 +215,11 @@ object Json
                 else
                     chCharPos += 1
 
-            else {
+            else
                 ch = -1
                 pos = size + 1
                 chKind = Eof
-            }
+
 
 
 
@@ -272,18 +273,18 @@ object Json
             chNext()
             val first = chMark
             var state = 0
-            do {
-              if (chKind == Eof) chError("EOF encountered in raw string")
-              state = (ch, state) match
-                  case ('}', _) => 1
-                  case ('"', 1) => 2
-                  case ('"', 2) => 3
-                  case ('"', 3) => 0
-                  case _ => 0
+            do
+                if (chKind == Eof) chError("EOF encountered in raw string")
+                state = (ch, state) match
+                case ('}', _) => 1
+                case ('"', 1) => 2
+                case ('"', 2) => 3
+                case ('"', 3) => 0
+                case _ => 0
 
 
-              chNext()
-            } while (state != 3)
+                chNext()
+            while (state != 3)
             tokenKind = STRING
             tokenValue = chSubstr(first, 3)
 
@@ -295,93 +296,92 @@ object Json
 
 
         def tokenNext() =
-            do {
+            do
                 linePos = chLinePos
                 charPos = chCharPos
                 val kind: Int = chKind
+
                 kind match
-                    case Letter =>
-                      val first = chMark
-                      while (chKind == Letter || chKind == Digit) {
-                        chNext()
-                      }
-                      tokenKind = ID
-                      tokenValue = chSubstr(first)
-
-                    case Digit => handleDigit()
-                    case Minus =>
+                case Letter =>
+                  val first = chMark
+                  while (chKind == Letter || chKind == Digit)
                       chNext()
-                      handleDigit()
-                      tokenValue = "-" + tokenValue
 
-                    case Quote =>
-                        val sb = new StringBuilder(50)
-                        chNext()
-                        var first = chMark
-                        while (ch != '"'.toInt && ch >= 32)
-                            if (ch == '\\'.toInt)
-                                sb.append(chSubstr(first))
-                                chNext()
-                                escapeMap.get(ch) match
-                                    case Some(s) =>
-                                        sb.append(s)
-                                        chNext()
+                  tokenKind = ID
+                  tokenValue = chSubstr(first)
 
-                                    case None =>
-                                        if (ch != 'u'.toInt) chError("Illegal escape")
-                                        chNext()
-                                        var code = 0
-                                        for (i <- 1 to 4)
-                                            val ch1 = ch.toChar.toString
-                                            val i = "0123456789abcdef".indexOf(ch1.toLowerCase)
-                                            if (i == -1) chError("Illegal hex character")
-                                            code = code * 16 + i
-                                            chNext()
+                case Digit => handleDigit()
+                case Minus =>
+                    chNext()
+                    handleDigit()
+                    tokenValue = "-" + tokenValue
 
-                                        sb.append(code.toChar.toString)
-
-                                first = chMark
-                            else
+                case Quote =>
+                    val sb = new StringBuilder(50)
+                    chNext()
+                    var first = chMark
+                    while (ch != '"'.toInt && ch >= 32)
+                        if (ch == '\\'.toInt)
+                            sb.append(chSubstr(first))
+                            chNext()
+                            escapeMap.get(ch) match
+                            case Some(s) =>
+                                sb.append(s)
                                 chNext()
 
+                            case None =>
+                                if (ch != 'u'.toInt) chError("Illegal escape")
+                                chNext()
+                                var code = 0
+                                for (i <- 1 to 4)
+                                    val ch1 = ch.toChar.toString
+                                    val i = "0123456789abcdef".indexOf(ch1.toLowerCase)
+                                    if (i == -1) chError("Illegal hex character")
+                                    code = code * 16 + i
+                                    chNext()
 
-                        if (ch != '"') chError("Unexpected string character: " + ch.toChar)
+                                sb.append(code.toChar.toString)
 
-                        sb.append(chSubstr(first))
-
-                        tokenKind = STRING
-
-                        tokenValue = sb.toString()
-                        chNext()
-                        if (tokenValue.length() == 0 && ch == '{')
-                            handleRaw()
-
-
-                    case Colon => handle(COLON)
-                    case Comma => handle(COMMA)
-                    case Lbra => handle(LOBJ)
-                    case Rbra => handle(ROBJ)
-                    case Larr => handle(LARR)
-                    case Rarr => handle(RARR)
-                    case Blank =>
-                        do chNext() while (chKind == Blank)
-                        tokenKind = BLANK
-                        tokenValue = ""
-
-                    case Other => chError("Unexpected character: " + ch.toChar + " " + ch)
-                    case Eof =>
-                        chNext()
-                        tokenKind = EOF
-                        tokenValue = ""
-
-                    case Slash =>
-                        if (chKind != Slash) chError("Expecting Slash")
-                        do chNext() while (ch != '\n' && chKind != Eof)
-                        tokenKind = BLANK
-                        tokenValue = ""
+                            first = chMark
+                        else
+                            chNext()
 
 
-            } while (tokenKind == BLANK)
+                    if (ch != '"') chError("Unexpected string character: " + ch.toChar)
+
+                    sb.append(chSubstr(first))
+
+                    tokenKind = STRING
+
+                    tokenValue = sb.toString()
+                    chNext()
+                    if (tokenValue.length() == 0 && ch == '{') handleRaw()
+
+                case Colon => handle(COLON)
+                case Comma => handle(COMMA)
+                case Lbra => handle(LOBJ)
+                case Rbra => handle(ROBJ)
+                case Larr => handle(LARR)
+                case Rarr => handle(RARR)
+                case Blank =>
+                    do chNext() while (chKind == Blank)
+                    tokenKind = BLANK
+                    tokenValue = ""
+
+                case Other => chError("Unexpected character: " + ch.toChar + " " + ch)
+                case Eof =>
+                    chNext()
+                    tokenKind = EOF
+                    tokenValue = ""
+
+                case Slash =>
+                    if (chKind != Slash) chError("Expecting Slash")
+                    do chNext() while (ch != '\n' && chKind != Eof)
+                    tokenKind = BLANK
+                    tokenValue = ""
+
+
+            while (tokenKind == BLANK)
 
 
         def tokenError(msg: String): Nothing =
@@ -399,9 +399,9 @@ object Json
             while (tokenKind != RARR)
                 result = getJson() :: result
                 tokenKind match
-                    case COMMA => tokenNext()
-                    case RARR => // do nothing
-                    case _ => tokenError("Expecting , or ]")
+                case COMMA => tokenNext()
+                case RARR => // do nothing
+                case _ => tokenError("Expecting , or ]")
 
 
             tokenNext()
@@ -420,20 +420,20 @@ object Json
                 tokenNext()
                 result = (name -> getJson()) :: result
                 tokenKind match
-                    case COMMA => tokenNext()
-                    case ROBJ => // do nothing
-                    case _ => tokenError("Expecting , or }")
+                case COMMA => tokenNext()
+                case ROBJ => // do nothing
+                case _ => tokenError("Expecting , or }")
 
 
             tokenNext()
             Js.Object(result.reverse)
 
         def handleNumber(name: String, f: String => Unit) =
-            try {
-              f(tokenValue)
-            } catch {
-              case _: Throwable => tokenError("Bad " + name)
-            }
+            try
+                f(tokenValue)
+            catch
+                case _: Throwable => tokenError("Bad " + name)
+
             val old = tokenValue
             tokenNext()
 
@@ -442,32 +442,31 @@ object Json
         def getJson(): Js.Value =
             val kind: Int = tokenKind
             val result: Js.Value = kind match
-                case ID =>
-                    val result = tokenValue match
-                        case "true" => Js.True
-                        case "false" => Js.False
-                        case "null" => Js.Null
-                        case _ => tokenError("Not true, false, or null")
+            case ID =>
+                val result = tokenValue match
+                case "true" => Js.True
+                case "false" => Js.False
+                case "null" => Js.Null
+                case _ => tokenError("Not true, false, or null")
 
+                tokenNext()
+                result
 
-                    tokenNext()
-                    result
+            case STRING =>
+                val result = tokenValue
+                tokenNext()
+                Js.String(result)
 
-                case STRING =>
-                    val result = tokenValue
-                    tokenNext()
-                    Js.String(result)
-
-                case NUMBER => handleNumber("NUMBER", _.toLong)
-                case BIGNUMBER => handleNumber("BIGNUMBER", _.toDouble)
-                case FLOATNUMBER => handleNumber("FLOATNUMBER", _.toDouble)
-                case COLON => handleUnexpected(":")
-                case COMMA => handleUnexpected(",")
-                case LOBJ => handleObject()
-                case ROBJ => handleUnexpected("}")
-                case LARR => handleArray()
-                case RARR => handleUnexpected("]")
-                case EOF => handleEof()
+            case NUMBER => handleNumber("NUMBER", _.toLong)
+            case BIGNUMBER => handleNumber("BIGNUMBER", _.toDouble)
+            case FLOATNUMBER => handleNumber("FLOATNUMBER", _.toDouble)
+            case COLON => handleUnexpected(":")
+            case COMMA => handleUnexpected(",")
+            case LOBJ => handleObject()
+            case ROBJ => handleUnexpected("}")
+            case LARR => handleArray()
+            case RARR => handleUnexpected("]")
+            case EOF => handleEof()
 
             result
 

@@ -8,6 +8,7 @@ import scala.collection.mutable.ListBuffer
 sealed trait Insert
 object Insert{
   case class LBraceStack(var baseIndent: Int = 0) extends Insert
+  case class LBraceCaseStack(var baseIndent: Int = 0) extends Insert
   case object RBrace extends Insert
   case object LBrace extends Insert
   case object RParen extends Insert
@@ -22,15 +23,16 @@ object Insert{
 trait PartialParsers extends Parsers with Scanners { t =>
 
   val modifierFor: PartialFunction[Stream[Int], PartialParser => Seq[(Int, Insert)]] = {
-    case (CLASS | TRAIT) #:: _            => _.classHeader
-    case (OBJECT | CASEOBJECT) #:: _      => _.objectHeader
-    case DEF #:: _                        => _.defHeader
-    case (IF | WHILE) #:: LPAREN #:: _    => _.ifWhileHeader
-    case (IF | WHILE) #:: _               => _.ifWhileLiteHeader
-    case FOR #:: (LPAREN | LBRACE) #:: _  => _.forHeader
-    case FOR #:: _                        => _.forLiteHeader
-    case (VAL | VAR) #:: _                => _.valVarHeader
-    case MATCH #:: _                      => _ => Seq(1 -> Insert.LBraceStack())
+    case (CLASS | TRAIT) #:: _                   => _.classHeader
+    case (OBJECT | CASEOBJECT) #:: _             => _.objectHeader
+    case DEF #:: _                               => _.defHeader
+    case (IF | WHILE) #:: LPAREN #:: _           => _.ifWhileHeader
+    case (IF | WHILE) #:: _                      => _.ifWhileLiteHeader
+    case FOR #:: (LPAREN | LBRACE) #:: _         => _.forHeader
+    case FOR #:: _                               => _.forLiteHeader
+    case (VAL | VAR) #:: _                       => _.valVarHeader
+    case (TRY | ELSE | DO) #:: _                 => _ => Seq(1 -> Insert.LBraceStack())
+    case (MATCH | CATCH ) #:: _                  => _ => Seq(1 -> Insert.LBraceCaseStack())
   }
 
   class PartialParser(inputDontUseMe: Iterator[ScannerData]) extends SourceFileParser(null) {

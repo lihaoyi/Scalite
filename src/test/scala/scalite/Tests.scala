@@ -10,18 +10,19 @@ object Tests extends TestSuite{
       'class-make("scalite.simple.Class", "Hello World!12")
       'assignments-make("scalite.simple.Assignments", 9)
       'modassignments-make("scalite.simple.ModAssignments", 9)
-      'ifelsewhile-make("scalite.simple.IfElseWhile", 37)
-      'ifelsewhilelite-make("scalite.simple.IfElseWhileLite", 37)
+      'ifelsewhile-make("scalite.simple.IfElseWhile", 36)
+      'ifelsewhilelite-make("scalite.simple.IfElseWhileLite", 36)
       'for-make("scalite.simple.For", 100)
       'forlite-make("scalite.simple.ForLite", 100)
       'match-make("scalite.simple.Match", "1")
       'multidef-make("scalite.simple.MultiDef", "Hello World!10")
       'toplevel-make("scalite.simple.TopLevel", "Hello World!112")
+      'trycatch-make("scalite.simple.TryCatch", "lolnull")
     }
     'messy{
       'class-make("scalite.messy.Class", 12)
       'assignments-make("scalite.messy.Assignments", 9)
-      'ifelsewhile-make("scalite.messy.IfElseWhile", 37)
+      'ifelsewhile-make("scalite.messy.IfElseWhile", 36)
       'for-make("scalite.messy.For", 100)
     }
     'medium{
@@ -32,8 +33,9 @@ object Tests extends TestSuite{
     }
     'tutorial{
       'js-make("scalite.tutorial.Js", """false true null "LOL" 123 [true, false] {"hello": "WorldTrue"}""")
+      'classes-make("scalite.tutorial.Classes", 11)
     }
-    'transformer-make("scalite.TransformerX", 0)
+
   }
 }
 
