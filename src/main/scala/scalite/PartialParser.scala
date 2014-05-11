@@ -9,6 +9,9 @@ sealed trait Insert
 object Insert{
   case class LBraceStack(var baseIndent: Int = 0) extends Insert
   case class LBraceCaseStack(var baseIndent: Int = 0) extends Insert
+  case class LBraceDoStack(var baseIndent: Int = 0) extends Insert
+  case class LParenDoStack(var baseIndent: Int = 0) extends Insert
+  case object DeleteDo extends Insert
   case object RBrace extends Insert
   case object LBrace extends Insert
   case object RParen extends Insert
@@ -21,18 +24,20 @@ object Insert{
  * headers of classes, functions, etc.. in the stream of tokens.
  */
 trait PartialParsers extends Parsers with Scanners { t =>
-
+  import Stream.Empty
   val modifierFor: PartialFunction[Stream[Int], PartialParser => Seq[(Int, Insert)]] = {
     case (CLASS | TRAIT) #:: _                   => _.classHeader
     case (OBJECT | CASEOBJECT) #:: _             => _.objectHeader
     case DEF #:: _                               => _.defHeader
+    case FOR #:: Empty                           => _ => Seq(1 -> Insert.LBraceDoStack())
+    case (IF | WHILE) #:: Empty                  => _ => Seq(1 -> Insert.LParenDoStack())
     case (IF | WHILE) #:: LPAREN #:: _           => _.ifWhileHeader
     case (IF | WHILE) #:: _                      => _.ifWhileLiteHeader
+    case (TRY | ELSE | DO | YIELD) #:: Empty     => _ => Seq(1 -> Insert.LBraceStack())
+    case (MATCH | CATCH) #:: Empty               => _ => Seq(1 -> Insert.LBraceCaseStack())
     case FOR #:: (LPAREN | LBRACE) #:: _         => _.forHeader
     case FOR #:: _                               => _.forLiteHeader
     case (VAL | VAR) #:: _                       => _.valVarHeader
-    case (TRY | ELSE | DO) #:: _                 => _ => Seq(1 -> Insert.LBraceStack())
-    case (MATCH | CATCH ) #:: _                  => _ => Seq(1 -> Insert.LBraceCaseStack())
   }
 
   class PartialParser(inputDontUseMe: Iterator[ScannerData]) extends SourceFileParser(null) {
@@ -134,10 +139,11 @@ trait PartialParsers extends Parsers with Scanners { t =>
     }
     def forLiteHeader = {
       index = 0
-
+      println("?????????? " + in.token)
       in.nextToken()
-      val startIndex = index
 
+      val startIndex = index
+      println("?????????? " + in.token)
       generator(eqOK = false)
       val endIndex = index
       newLinesOpt()

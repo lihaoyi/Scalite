@@ -44,7 +44,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
          .foreach(println)
 
     println("")
-    val stack = mutable.Stack[Int](1)
+    val stack = mutable.Stack[(Int, Boolean, Boolean)]((1, false, false))
     def nextLineToken(i: Int) = (input.lift(i+1).map(_.token), input.lift(i+2).map(_.token)) match{
       case (Some(Tokens.NEWLINE | Tokens.NEWLINES), Some(_)) => Some(i+2)
       case (Some(_), _) => Some(i+1)
@@ -62,15 +62,17 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
         }
       }else {
         for(next <- nextLineToken(i)) {
-          if (input(next).token != Tokens.CASE) while(input(next).col < stack.top) {
+          if (input(next).token != Tokens.CASE) while(input(next).col < stack.top._1) {
+            if (stack.top._2) insertions(i) ::= DeleteDo
             insertions(i) ::= RBrace
+            if (stack.top._3)insertions(i) ::= RParen
             println{"POP STACK " + stack.pop()}
           }
         }
       }
-
+      val stream = input.toStream.drop(i)
       for{
-        f <- modifierFor.lift(input.toStream.drop(i).map(_.token))
+        f <- modifierFor.lift(stream.takeWhile(_.line == stream(0).line).map(_.token))
         tokens = f(new PartialParser(input.toIterator.drop(i)))
         lastOpt <- tokens.lastOption
         last = input(i + lastOpt._1)
@@ -82,22 +84,41 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
         token match{
           case t: LBraceStack => t.baseIndent = input(next).col
           case t: LBraceCaseStack => t.baseIndent = input(next).col
+          case t: LBraceDoStack => t.baseIndent = input(next).col
+          case t: LParenDoStack => t.baseIndent = input(next).col
           case _ =>
         }
         insertions(i + offset - 1) ::= token
       }
 
       insertions(i).collect{
-        case LBraceStack(baseIndent) => stack.push(baseIndent)
-        case LBraceCaseStack(baseIndent) => stack.push(baseIndent + 1)
+        case LBraceStack(baseIndent) => stack.push((baseIndent, false, false))
+        case LBraceCaseStack(baseIndent) => stack.push((baseIndent + 1, false, false))
+        case LBraceDoStack(baseIndent) => stack.push((baseIndent, true, false))
+        case LParenDoStack(baseIndent) => stack.push((baseIndent, true, true))
       }
     }
     insertions.foreach(println)
     val merged = mutable.Buffer.empty[ScannerData]
+    var deleteDo = false
     for(i <- 0 until input.length){
-      merged.append(input(i))
+      input(i).token match {
+        case Tokens.DO if deleteDo => deleteDo = false
+        case Tokens.NEWLINE => merged.append(input(i))
+        case _ =>
+          merged.append(input(i))
+          deleteDo = false
+      }
+
       insertions(i).reverse.foreach{
-        case LBraceCaseStack(_) | LBraceStack(_) | LBrace =>
+        case LParenDoStack(_) =>
+          for(i <- Seq(Tokens.LPAREN, Tokens.LBRACE)) {
+            val td = new ScannerData {}
+            td.copyFrom(merged.last)
+            td.token = i
+            merged.append(td)
+          }
+        case LBraceDoStack(_) | LBraceCaseStack(_) | LBraceStack(_) | LBrace =>
           val td = new ScannerData{}
           td.copyFrom(merged.last)
           td.token = Tokens.LBRACE
@@ -118,6 +139,8 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
           td.copyFrom(merged.last)
           td.token = Tokens.LPAREN
           merged.append(td)
+        case DeleteDo =>
+          deleteDo = true
       }
     }
 

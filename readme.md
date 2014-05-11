@@ -42,8 +42,10 @@ var a =                                                     var a = {
     1 + 2 + 3                                                 1 + 2 + 3
                                                             }
 def apply() =                                               def apply() = {
-    x + a // 9                                                x + a // 9
+    x + a                                                     x + a
+    // 9                                                      // 9
                                                             }
+
 ```
 
 `y` and `z` are local variables only scoped to the definition of `x`, and not visible outside it. The same rule applies for `for` loops, `if`/`else`/`while`/`do`/`try` blocks. Here's some samples from the unit tests:
@@ -63,8 +65,25 @@ val list =                                                  val list = {
         i * j                                                   i * j
                                                               }
                                                             }
-list.max // 10100                                           list.max // 10100
+list.max                                                    list.max
+// 10100                                                    // 10100
 ```
+
+Multi-line for- and for-yield blocks work too:
+
+```scala
+val all = for                                               val all = for {
+    x <- 0 to 10                                              x <- 0 to 10
+    y <- 0 to 10                                              y <- 0 to 10
+    if x + y == 10                                            if x + y == 10
+yield                                                       } yield {
+    val z = x * y                                             val z = x * y
+    z                                                         z
+                                                            }
+all.max                                                     all.max
+// 25                                                       // 25
+```
+
 While/If/Else
 -------------
 ```scala
@@ -80,7 +99,8 @@ while (x < 10)                                              while (x < 10) {
         y += x                                                  y += x
                                                               }
                                                             }
-y // 36                                                     y // 36
+y                                                           y
+// 36                                                       // 36
 ```
 Top-level definitions
 ---------------------
@@ -117,7 +137,8 @@ case 1 =>                                                     case 1 =>
     "1"                                                         "1"
 case 2 => "2"                                                 case 2 => "2"
                                                             }
-z // "2"                                                    z // "2"
+z                                                           z
+// "2"                                                      // "2"
 ```
 
 The same applies to the `catch` block of a try-catch expression:
@@ -151,7 +172,8 @@ val list =                                                  val list = {
         i * j                                                   i * j
                                                               }
                                                             }
-list.max // 10100                                           list.max // 10100
+list.max                                                    list.max
+// 10100                                                    // 10100
 
 var x = 0                                                   var x = 0
 var y = 0                                                   var y = 0
@@ -165,9 +187,75 @@ while x < 10                                                while (x < 10) {
         y += x                                                  y += x
                                                               }
                                                             }
-y // 36                                                     y // 36
+y                                                           y
+// 36                                                       // 36
 ```
 
+Tall Headers
+==============
+
+Scalite supports spreading out the header of a for-loop over multiple lines:
+
+```scala
+val all = for                                               val all = for {
+    x <- 0 to 10                                              x <- 0 to 10
+    y <- 0 to 10                                              y <- 0 to 10
+    if x + y == 10                                            if x + y == 10
+yield                                                       } yield {
+    val z = x * y                                             val z = x * y
+    z                                                         z
+                                                            }
+all.max                                                     all.max
+// 25                                                       // 25
+
+var i = 0                                                   var i = 0
+for                                                         for {
+    x <- 0 to 10                                              x <- 0 to 10
+    y <- 0 to 10                                              y <- 0 to 10
+    if x + y == 10                                            if x + y == 10
+do                                                          } {
+    val z = x * y                                             val z = x * y
+    i += z                                                    i += z
+                                                            }
+i                                                           i
+// 165                                                      // 165
+```
+
+As well as the conditional of an if-statement:
+
+```scala
+if                                                          if ({
+    println("checking...")                                    println("checking...")
+    var j = i + 1                                             var j = i + 1
+    j < 10                                                    j < 10
+do                                                          }) {
+    println("small")                                          println("small")
+    1                                                         1
+else                                                        } else {
+    println("big")                                            println("big")
+    100                                                       100
+                                                            }
+```
+
+Or while loop:
+
+```scala
+var i = 0                                                   var i = 0
+var k = 0                                                   var k = 0
+while                                                       while({
+    println("Check!")                                         println("Check!")
+    var j = i + 1                                             var j = i + 1
+    j < 10                                                    j < 10
+do                                                          }){
+    println("Loop!")                                          println("Loop!")
+    i += 1                                                    i += 1
+    k += i                                                    k += i
+                                                            }
+k                                                           k
+// 45                                                       // 45
+```
+
+As you can see, the `do` keyword is used to indicate that the previous block has ended and a new block begins, in situations where in the default Scala syntax you only have a `}{` or `){` to separate these expressions. There should be no ambiguity with a do-while loop due to the fact that the do-while and while-do/for-do/if-dp always come together.
 
 More?
 =====
