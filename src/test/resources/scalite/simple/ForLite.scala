@@ -8,3 +8,10 @@ class ForLite
             val k = j + 1
             x += k
         x
+
+        val list =
+            for i <- 0 to x yield
+                val j = i + 1
+                i * j
+
+        list.max

@@ -52,12 +52,18 @@ For loops
 ---------
 ```scala
 var x = 0                                                   var x = 0
-for (i <- 0 until 10)                                       for (i <- 0 until 10) {
+for(i <- 0 until 10)                                        for(i <- 0 until 10)
     val j = i * 2                                             val j = i * 2
     val k = j + 1                                             val k = j + 1
     x += k                                                    x += k
                                                             }
-x // 100                                                    x // 100
+val list =                                                  val list = {
+    for(i <- 0 to x) yield                                    for(i <- 0 to x) yield {
+        val j = i + 1                                           val j = i + 1
+        i * j                                                   i * j
+                                                              }
+                                                            }
+list.max // 10100                                           list.max // 10100
 ```
 While/If/Else
 -------------
@@ -139,7 +145,13 @@ for i <- 0 until 10                                         for (i <- 0 until 10
     val k = j + 1                                             val k = j + 1
     x += k                                                    x += k
                                                             }
-x // 100                                                    x // 100
+val list =                                                  val list = {
+    for i <- 0 to x yield                                     for i <- 0 to x yield {
+        val j = i + 1                                           val j = i + 1
+        i * j                                                   i * j
+                                                              }
+                                                            }
+list.max // 10100                                           list.max // 10100
 
 var x = 0                                                   var x = 0
 var y = 0                                                   var y = 0
