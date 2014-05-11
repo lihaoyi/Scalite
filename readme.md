@@ -111,7 +111,7 @@ Match blocks
 Match blocks are similarly indentation delimited, but with a twist: since there isn't any ambiguity between more `case` clauses and statements outside the `match` block, Scalite does not require you to indent the `case` clauses, saving you one level of indentation:
 
 ```scala
-val z = 1 match                                             val z = 1 match {
+val z = (1 + 1) match                                             val z = 1 match {
 case 1 =>                                                     case 1 =>
     println("One!")                                             println("One!")
     "1"                                                         "1"
