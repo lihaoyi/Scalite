@@ -73,7 +73,8 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       for{
         f <- modifierFor.lift(input.toStream.drop(i).map(_.token))
         tokens = f(new PartialParser(input.toIterator.drop(i)))
-        last = input(i + tokens.last._1)
+        lastOpt <- tokens.lastOption
+        last = input(i + lastOpt._1)
         next <- nextLineToken(i + tokens.last._1 - 1)
         if input(next).line > input(i).line
         if input(next).col > colForLine(input(i).line)

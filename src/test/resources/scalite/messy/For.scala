@@ -1,4 +1,4 @@
-package scalite.simple
+package scalite.messy
 
 class For
    def apply() =

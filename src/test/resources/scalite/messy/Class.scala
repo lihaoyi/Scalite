@@ -1,8 +1,9 @@
 package scalite.messy
 
 trait Cow
+  def y = 10
 
-class Thing(x: Int)
+class Thing(var x: Int)
 
 class Class[T]
       extends Thing(
@@ -11,6 +12,6 @@ class Class[T]
 with
         Cow
    def apply() =
-      1
+      1 + x + y
 
 

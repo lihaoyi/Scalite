@@ -23,7 +23,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
 
   val modifierFor: PartialFunction[Stream[Int], PartialParser => Seq[(Int, Insert)]] = {
     case (CLASS | TRAIT) #:: _            => _.classHeader
-    case OBJECT #:: _                     => _.objectHeader
+    case (OBJECT | CASEOBJECT) #:: _      => _.objectHeader
     case DEF #:: _                        => _.defHeader
     case (IF | WHILE) #:: LPAREN #:: _    => _.ifWhileHeader
     case (IF | WHILE) #:: _               => _.ifWhileLiteHeader
@@ -50,13 +50,19 @@ trait PartialParsers extends Parsers with Scanners { t =>
 
     import treeBuilder.{global => _, _}
 
+
     def valVarHeader = {
       index = 0
       in.nextToken()
       val lhs = commaSeparated(stripParens(noSeq.pattern2()))
       val tp = typedOpt()
-      accept(EQUALS)
-      Seq(index -> Insert.LBraceStack())
+
+      in.token match{
+        case EQUALS =>
+          in.nextToken()
+          Seq(index -> Insert.LBraceStack())
+        case _ => Nil
+      }
     }
 
     private var classContextBounds: List[t.global.Tree] = Nil
@@ -72,7 +78,6 @@ trait PartialParsers extends Parsers with Scanners { t =>
       if (in.token == THIS) {
         val vparamss = paramClauses(t.global.nme.CONSTRUCTOR, classContextBounds map (_.duplicate), ofCaseClass = false)
         typedOpt()
-        accept(EQUALS)
       } else {
         val nameOffset = in.offset
         val name = ident()
@@ -80,9 +85,14 @@ trait PartialParsers extends Parsers with Scanners { t =>
         val tparams = typeParamClauseOpt(name, contextBoundBuf)
         val vparamss = paramClauses(name, contextBoundBuf.toList, ofCaseClass = false)
         typedOpt()
-        accept(EQUALS)
       }
-      Seq(index -> Insert.LBraceStack())
+
+      in.token match{
+        case EQUALS =>
+          in.nextToken()
+          Seq(index -> Insert.LBraceStack())
+        case _ => Nil
+      }
     }
 
     def ifWhileHeader = {
@@ -94,15 +104,18 @@ trait PartialParsers extends Parsers with Scanners { t =>
 
     def ifWhileLiteHeader = {
       index = 0
-
       in.nextToken()
       val startIndex = index
-      expr()
-      Seq(
-        startIndex -> Insert.LParen,
-        index -> Insert.RParen,
-        index -> Insert.LBraceStack()
-      )
+      stripParens(postfixExpr())
+      in.token match{
+        case ARROW => Nil
+        case _ =>
+          Seq(
+            startIndex -> Insert.LParen,
+            index -> Insert.RParen,
+            index -> Insert.LBraceStack()
+          )
+      }
     }
 
     def forHeader = {
@@ -153,11 +166,13 @@ trait PartialParsers extends Parsers with Scanners { t =>
       index = 0
       val isTrait = in.token == TRAIT
       val isCase = in.token == CASECLASS
+
       in.nextToken()
-      val name = ident()
+      val name = ident().toTypeName
 
       val contextBoundBuf = new ListBuffer[t.global.Tree]
-      typeParamClauseOpt(name, contextBoundBuf)
+      val c = typeParamClauseOpt(name, contextBoundBuf)
+
       if (!isTrait){
         accessModifierOpt()
         paramClauses(name, classContextBounds, ofCaseClass = isCase)

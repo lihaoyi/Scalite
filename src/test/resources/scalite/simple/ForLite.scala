@@ -7,6 +7,4 @@ class ForLite
          val j = i * 2
          val k = j + 1
          x += k
-
-
       x

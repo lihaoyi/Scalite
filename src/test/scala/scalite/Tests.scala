@@ -7,22 +7,33 @@ import TestUtils._
 object Tests extends TestSuite{
   val tests = TestSuite{
     'simple{
-      'class-make("scalite.simple.Class")
-      'assignments-make("scalite.simple.Assignments")
-      'ifelsewhile-make("scalite.simple.IfElseWhile")
-      'ifelsewhilelite-make("scalite.simple.IfElseWhileLite")
-      'for-make("scalite.simple.For")
-      'forlite-make("scalite.simple.ForLite")
-      'match-make("scalite.simple.Match")
-      'multidef-make("scalite.simple.MultiDef")
+      'class-make("scalite.simple.Class", "Hello World!12")
+      'assignments-make("scalite.simple.Assignments", 9)
+      'modassignments-make("scalite.simple.ModAssignments", 9)
+      'ifelsewhile-make("scalite.simple.IfElseWhile", 37)
+      'ifelsewhilelite-make("scalite.simple.IfElseWhileLite", 37)
+      'for-make("scalite.simple.For", 100)
+      'forlite-make("scalite.simple.ForLite", 100)
+      'match-make("scalite.simple.Match", "1")
+      'multidef-make("scalite.simple.MultiDef", "Hello World!10")
+      'toplevel-make("scalite.simple.TopLevel", "Hello World!112")
     }
     'messy{
-      'class-make("scalite.messy.Class")
-      'assignments-make("scalite.messy.Assignments")
-      'ifelsewhile-make("scalite.messy.IfElseWhile")
-      'for-make("scalite.messy.For")
+      'class-make("scalite.messy.Class", 12)
+      'assignments-make("scalite.messy.Assignments", 9)
+      'ifelsewhile-make("scalite.messy.IfElseWhile", 37)
+      'for-make("scalite.messy.For", 100)
     }
-    'transformer-make("scalite.TransformerX")
+    'medium{
+      'modifiers-make("scalite.medium.Modifiers", 1111111)
+      'abstract-make("scalite.medium.Abstract", 111111)
+      'params-make("scalite.medium.Params", 11111)
+      'matching-make("scalite.medium.Matching", 1)
+    }
+    'tutorial{
+      'js-make("scalite.tutorial.Js", """false true null "LOL" 123 [true, false] {"hello": "WorldTrue"}""")
+    }
+    'transformer-make("scalite.TransformerX", 0)
   }
 }
 

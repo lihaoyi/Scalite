@@ -5,7 +5,7 @@ import tools.nsc.io._
 import tools.nsc.{Global, Settings}
 import tools.nsc.reporters.ConsoleReporter
 import scala.reflect.io.{AbstractFile, VirtualDirectory}
-
+import utest._
 object TestUtils {
 
 
@@ -15,7 +15,7 @@ object TestUtils {
     else List(src)
   }
 
-  def make(name: String) = {
+  def make[T](name: String, expected: T) = {
 
     val sources = List("src/test/resources/" + name.replace('.', '/') + ".scala")
 
@@ -74,8 +74,10 @@ object TestUtils {
 
     if (vd.toList.isEmpty) throw CompilationException
 
-    val cls = cl.loadClass(name)
-
+    val cls: Class[_] = cl.loadClass(name)
+    val result = cls.getMethod("apply").invoke(cls.newInstance())
+    assert(result == expected)
+    result
   }
 
   object CompilationException extends Exception

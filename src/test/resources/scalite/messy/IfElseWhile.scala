@@ -17,5 +17,9 @@ class IfElseWhile
             x = x + 2
             y += x
 
+      if (
+          x % 2 == 0
+      )
+          y = y + 1
       y
 
