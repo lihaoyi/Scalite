@@ -162,6 +162,8 @@ def-header, var/val/lazyval, or control-flow construct
 
 Although there are a myriad of edge cases in this translation, this is the approximate algorithm that should explain the bulk of Scalite's behavior.
 
+Notably, the fact that Scalite only special-cases lines which do not end in a `{` means that old-fashioned curly-brace Scala continues to function perfectly fine, and can be mixed together with Scalite code in the same source files and still compile without issue.
+
 Implementation
 ==============
 Rather than being a hacky text-manipulator, Scalite is implemented as a modification to the Scala compiler that performs the transformation directly on the token-stream being produced by Scala's lexer. Scalite also has access to Scala's parser, which lets it recognize language constructs on an AST (and not just the token) level and hopefully provide a more robust implementation of the whitespace-delimited syntax.
@@ -170,6 +172,6 @@ A more robust solution would be to fork the Scala compiler's recursive-descent p
 
 Scalite is implemented as a custom `Global` rather than as a compiler plugin, because the Scala compiler architecture does not allow compiler plugins to replace the lexing-and-parsing phase of the compilation pipeline. This makes it difficult to bundle up and re-use in other projects. Nevertheless, there is a moderately large suite of unit tests which uses this custom `Global` to programmatically compile chunks of code and executes them to ensure they behave as expected.
 
-Scalite is the culmination of about 30 hours of work, and isn't ready to be used for anything at all. The semantics are full of bugs, and the implementation is a rats nest of complexity, but *it works*, and hopefully will inspire or convince someone else that a whitespace-based syntax is something worth fighting for.
+Scalite is the culmination of about 30 hours of work, and isn't ready to be used for anything at all. The semantics are full of bugs, and the implementation is a rats nest of complexity, but *it works*, and hopefully will inspire or convince someone else that a whitespace-based syntax is something worth trying out.
 
 
