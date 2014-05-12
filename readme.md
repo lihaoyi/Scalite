@@ -45,7 +45,6 @@ def apply() =                                               def apply() = {
     x + a                                                     x + a
     // 9                                                      // 9
                                                             }
-
 ```
 
 `y` and `z` are local variables only scoped to the definition of `x`, and not visible outside it. The same rule applies for `for` loops, `if`/`else`/`while`/`do`/`try` blocks. Here's some samples from the unit tests:
