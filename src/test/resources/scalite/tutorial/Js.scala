@@ -281,7 +281,7 @@ object Json
             chNext()
             val first = chMark
             var state = 0
-            do
+            while
                 if (chKind == Eof) chError("EOF encountered in raw string")
                 state = (ch, state) match
                 case ('}', _) => 1
@@ -292,7 +292,8 @@ object Json
 
 
                 chNext()
-            while (state != 3)
+                (state != 3)
+            do ()
             tokenKind = STRING
             tokenValue = chSubstr(first, 3)
 
@@ -304,7 +305,7 @@ object Json
 
 
         def tokenNext() =
-            do
+            while
                 linePos = chLinePos
                 charPos = chCharPos
                 val kind: Int = chKind
@@ -374,7 +375,10 @@ object Json
                 case Larr => handle(LARR)
                 case Rarr => handle(RARR)
                 case Blank =>
-                    do chNext() while (chKind == Blank)
+                    while
+                        chNext()
+                        (chKind == Blank)
+                    do ()
                     tokenKind = BLANK
                     tokenValue = ""
 
@@ -386,13 +390,16 @@ object Json
 
                 case Slash =>
                     if (chKind != Slash) chError("Expecting Slash")
-                    do chNext() while (ch != '\n' && chKind != Eof)
+                    while
+                        chNext()
+                        (ch != '\n' && chKind != Eof)
+                    do ()
                     tokenKind = BLANK
                     tokenValue = ""
 
 
-            while (tokenKind == BLANK)
-
+                (tokenKind == BLANK)
+            do ()
 
         def tokenError(msg: String): Nothing =
             throw new Json.Exception(msg, s, linePos, charPos)

@@ -213,6 +213,8 @@ zs.sum                                                      zs.sum
 // 45                                                       // 45
 ```
 
+The `do` at the end of the can be made optional with a slightly cleverer parser, but for now it is required.
+
 Tall Headers
 ------------
 
@@ -279,6 +281,31 @@ k                                                           k
 
 As you can see, the `do` keyword is used to indicate that the previous block has ended and a new block begins, in situations where in the default Scala syntax you only have a `}{` or `){` to separate these expressions. There should be no ambiguity with a do-while loop due to the fact that the do-while and while-do/for-do/if-dp always come together.
 
+
+Redundant Do-While Loops
+------------------------
+
+Despite the fact that do-while loops still work, they are rendered redundant by the fact that the condition and body of the while loop are now symmetrical: Both sections of the loop can now easily hold an arbitrary block of statements, and any statements that you wish to execute *before* the condition is checked for the first time can simply be placed in the uppder block before the `do`.
+
+Any do-while loop of the form
+
+```scala
+do {
+  A
+} while (B)
+```
+
+Can be equivalently rewritten as
+
+```scala
+while
+    A
+    B
+do ()
+```
+
+With a slightly cleverer parser, the ugly `do ()` at the end of the loop can be removed, although for now it is required.
+
 More?
 =====
 
@@ -292,7 +319,7 @@ Rewrite Rules
 Scalite implements approximately the following transform to convert the Scalite code to valid Scala:
 
 - If the last tree T on a line is a class/trait/object-header,
-def-header, var/val/lazyval, or control-flow construct
+def-header, var/val/lazyval, do, or control-flow construct
 - And it is immediately followed by a `\n` with no `{`
 - Then insert a `{` at the end of that line,
 - And insert a `}` at the beginning of the first line whose indentation is less-than-or-equal to the indentation of the line of the *start* of the tree T and the first token of that line is not a `case`
