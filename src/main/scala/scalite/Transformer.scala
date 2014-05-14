@@ -9,8 +9,6 @@ import scalite.Insert._
  * scala compiler
  */
 trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
-
-
   def transform(input: Seq[ScannerData])(implicit source: SourceFile): Seq[ScannerData] = {
 
     // Move all newlines to the end of the previous line, rather than the start
@@ -28,48 +26,33 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       arr
     }
 
+    render(input)
+
     val insertions = mutable.Seq.fill[List[Insert]](input.length)(Nil)
-    println("tokens")
 
-    input.groupBy(_.line)
-         .toList
-         .sortBy(_._1)
-         .map(_._2.toList)
-         .map(x => x.map(x => token2string(x.token)).mkString("\t"))
-         .foreach(println)
-
-    println("")
     val stack = mutable.Stack[(Int, Boolean, Boolean)]((1, false, false))
-    def nextLineToken(i: Int) = (input.lift(i+1).map(_.token), input.lift(i+2).map(_.token)) match{
-      case (Some(Tokens.NEWLINE | Tokens.NEWLINES), Some(_)) => Some(i+2)
-      case (Some(_), _) => Some(i+1)
-      case _ => None
+    def nextLineToken(i: Int) = input(i+1).token match{
+      case Tokens.NEWLINE | Tokens.NEWLINES => Some(i+2)
+      case _ => Some(i+1)
     }
-    for(i <- 0 until input.length){
 
+    for(i <- 0 until input.length - 1){
       val curr = input(i)
       println(i + "\tloop\t" + stack.top + "\t" + curr.col + "\t" + token2string(curr.token))
-
-      if (input(i).token == Tokens.EOF){
-        while(stack.length > 1){
-          insertions(i-1) ::= RBrace
+      for(next <- nextLineToken(i)) {
+        if (input(next).token != Tokens.CASE) while(input(next).col < stack.top._1) {
+          if (stack.top._2) insertions(i) ::= DeleteDo
+          insertions(i) ::= RBrace
+          if (stack.top._3)insertions(i) ::= RParen
           println{"POP STACK " + stack.pop()}
         }
-      }else {
-        for(next <- nextLineToken(i)) {
-          if (input(next).token != Tokens.CASE) while(input(next).col < stack.top._1) {
-            if (stack.top._2) insertions(i) ::= DeleteDo
-            insertions(i) ::= RBrace
-            if (stack.top._3)insertions(i) ::= RParen
-            println{"POP STACK " + stack.pop()}
-          }
-        }
       }
+
       val stream = input.toStream.drop(i)
+
       for{
         f <- modifierFor.lift(stream.takeWhile(_.line == stream(0).line).map(_.token))
         tokens = f(new PartialParser(input.toIterator.drop(i), colForLine)(source))
-        _ = println("TOKENS  " + tokens)
         lastOpt <- tokens.lastOption
         last = input(i + lastOpt._1)
         next <- nextLineToken(i + tokens.last._1 - 1)
@@ -95,6 +78,10 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
         case LParenDoStack(baseIndent) => stack.push((baseIndent, true, true))
       }
     }
+    while(stack.length > 1){
+      insertions(insertions.length - 2) ::= RBrace
+      println{"POP STACK " + stack.pop()}
+    }
     insertions.foreach(println)
     val merged = mutable.Buffer.empty[ScannerData]
     var deleteDo = false
@@ -110,47 +97,21 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       insertions(i).reverse.foreach{
         case LParenDoStack(_) =>
           for(i <- Seq(Tokens.LPAREN, Tokens.LBRACE)) {
-            val td = new ScannerData {}
-            td.copyFrom(merged.last)
-            td.token = i
-            merged.append(td)
+            merged.append(copyData(merged.last, _.token = i))
           }
         case LBraceDoStack(_) | LBraceCaseStack(_) | LBraceStack(_) | LBrace =>
-          val td = new ScannerData{}
-          td.copyFrom(merged.last)
-          td.token = Tokens.LBRACE
-          merged.append(td)
+          merged.append(copyData(merged.last, _.token = Tokens.LBRACE))
 
-        case RBrace =>
-          val td = new ScannerData{}
-          td.copyFrom(merged.last)
-          td.token = Tokens.RBRACE
-          merged.append(td)
-        case RParen =>
-          val td = new ScannerData{}
-          td.copyFrom(merged.last)
-          td.token = Tokens.RPAREN
-          merged.append(td)
-        case LParen =>
-          val td = new ScannerData{}
-          td.copyFrom(merged.last)
-          td.token = Tokens.LPAREN
-          merged.append(td)
-        case DeleteDo =>
-          deleteDo = true
+        case RBrace => merged.append(copyData(merged.last, _.token = Tokens.RBRACE))
+        case RParen => merged.append(copyData(merged.last, _.token = Tokens.RPAREN))
+        case LParen => merged.append(copyData(merged.last, _.token = Tokens.LPAREN))
+        case DeleteDo => deleteDo = true
       }
     }
 
-    println("tokens")
 
-    merged.groupBy(_.line)
-      .toList
-      .sortBy(_._1)
-      .map(_._2.toList)
-      .map(x => x.map(x => token2string(x.token)).mkString("\t"))
-      .foreach(println)
+    render(merged)
 
-    println("")
     merged
   }
 }

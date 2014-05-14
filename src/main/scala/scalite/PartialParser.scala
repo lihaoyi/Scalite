@@ -25,6 +25,23 @@ object Insert{
  * headers of classes, functions, etc.. in the stream of tokens.
  */
 trait PartialParsers extends Parsers with Scanners { t =>
+
+  def copyData(sd: ScannerData, ops: (ScannerData => Unit)*) = {
+    val td = new ScannerData{}
+    td.copyFrom(sd)
+    ops.map(_(td))
+    td
+  }
+  def render(input: Seq[ScannerData])(implicit source: SourceFile) = {
+    println("tokens")
+    input.groupBy(_.line)
+         .toList
+         .sortBy(_._1)
+         .map(_._2.toList)
+         .map(x => x.map(x => token2string(x.token)).mkString("\t"))
+         .foreach(println)
+    println("")
+  }
   implicit class pimpedToken(td: TokenData){
     def pos(implicit source: SourceFile) = source.position(td.offset)
     def col(implicit source: SourceFile) = pos.column

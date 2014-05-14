@@ -26,20 +26,14 @@ class Globalite(settings: Settings, reporter: Reporter) extends Global(settings,
 abstract class SyntaxAnalyzerLite extends SyntaxAnalyzer with Transformer{
   import global._
 
-
-  class UnitScannerX(unit: CompilationUnit, patches: List[BracePatch] = Nil) extends UnitScanner(unit, patches){
+  class UnitScannerX(unit: CompilationUnit, patches: List[BracePatch] = Nil)
+  extends UnitScanner(unit, patches){
     lazy val buffer = {
       val buffer = mutable.Buffer.empty[ScannerData]
-
       while (this.token != EOF){
         super.nextToken()
-        val td = new ScannerData{}
-        td.copyFrom(this)
-
-        buffer.append(td)
-
+        buffer.append(copyData(this))
       }
-
       transform(buffer)(unit.source)
     }
 
@@ -49,10 +43,10 @@ abstract class SyntaxAnalyzerLite extends SyntaxAnalyzer with Transformer{
       index += 1
     }
   }
-  class UnitParserX(unit: global.CompilationUnit, patches: List[BracePatch] = Nil) extends UnitParser(unit, patches){
-
+  class UnitParserX(unit: global.CompilationUnit, patches: List[BracePatch] = Nil)
+  extends UnitParser(unit, patches){
     override def newScanner() = new UnitScannerX(unit, patches)
-    override def withPatches(patches: List[BracePatch]): UnitParser = new UnitParserX(unit, patches)
+    override def withPatches(patches: List[BracePatch]) = new UnitParserX(unit, patches)
   }
 }
 
