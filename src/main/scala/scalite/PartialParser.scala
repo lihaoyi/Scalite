@@ -32,13 +32,15 @@ trait PartialParsers extends Parsers with Scanners { t =>
     ops.map(_(td))
     td
   }
-  def render(input: Seq[ScannerData])(implicit source: SourceFile) = {
+  def render(input: Seq[ScannerData])
+            (implicit source: SourceFile, colForLine: Seq[Int]) = {
     println("tokens")
     input.groupBy(_.line)
          .toList
          .sortBy(_._1)
-         .map(_._2.toList)
-         .map(x => x.map(x => token2string(x.token)).mkString("\t"))
+         .map{ case (line, x) =>
+            " " * colForLine(line) + x.map(x => token2string(x.token)).mkString("\t")
+          }
          .foreach(println)
     println("")
   }

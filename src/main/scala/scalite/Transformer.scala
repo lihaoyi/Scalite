@@ -16,7 +16,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
        if (i.token == Tokens.NEWLINE || i.token == Tokens.NEWLINES) i.offset -= 1
     }
 
-    val colForLine: Seq[Int] = {
+    implicit val colForLine: Seq[Int] = {
       val arr = new Array[Int](source.content.mkString.lines.length+1)
       for(token <- input){
         if (arr(token.line) == 0){
@@ -31,7 +31,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
     val insertions = {
       val insertions = mutable.Seq.fill[List[Insert]](input.length)(Nil)
 
-      val stack = mutable.Stack[(Int, Boolean, Boolean)]((1, false, false))
+      val stack = mutable.Stack[(Int, Boolean, Boolean)]()
       def nextLineToken(i: Int) = input(i + 1).token match {
         case Tokens.NEWLINE | Tokens.NEWLINES => Some(i + 2)
         case _ => Some(i + 1)
@@ -39,15 +39,12 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
 
       for (i <- 0 until input.length - 1) {
         val curr = input(i)
-        println(i + "\tloop\t" + stack.top + "\t" + curr.col + "\t" + token2string(curr.token))
         for (next <- nextLineToken(i)) {
-          if (input(next).token != Tokens.CASE) while (input(next).col < stack.top._1) {
+          if (input(next).token != Tokens.CASE) while (!stack.isEmpty && input(next).col < stack.top._1) {
             if (stack.top._2) insertions(i) ::= DeleteDo
             insertions(i) ::= RBrace
             if (stack.top._3) insertions(i) ::= RParen
-            println {
-              "POP STACK " + stack.pop()
-            }
+            stack.pop()
           }
         }
 
@@ -81,7 +78,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
           case LParenDoStack(baseIndent) => stack.push((baseIndent, true, true))
         }
       }
-      while (stack.length > 1) {
+      while (stack.length > 0) {
         insertions(insertions.length - 2) ::= RBrace
         stack.pop()
       }
