@@ -203,10 +203,10 @@ ys.sum                                                      ys.sum
 // 55                                                       // 55
 
 val zs = xs.map do                                          val zs = xs.map{
-    case 1 => 1                                               case 1 => 1
-    case 2 => 2                                               case 2 => 2
-    case x if x % 2 == 0 => x + 1                             case x if x % 2 == 0 => x + 1
-    case x if x % 2 != 0 => x - 1                             case x if x % 2 != 0 => x - 1
+case 1 => 1                                                   case 1 => 1
+case 2 => 2                                                   case 2 => 2
+case x if x % 2 == 0 => x + 1                                 case x if x % 2 == 0 => x + 1
+case x if x % 2 != 0 => x - 1                                 case x if x % 2 != 0 => x - 1
                                                             }
 zs.sum                                                      zs.sum
 // 45                                                       // 45

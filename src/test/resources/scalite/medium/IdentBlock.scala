@@ -7,9 +7,9 @@ class IdentBlock
           x => x + 1
 
         val zs = xs.map do
-          case 1 => 1
-          case 2 => 2
-          case x if x % 2 == 0 => x + 1
-          case x if x % 2 != 0 => x - 1
+        case 1 => 1
+        case 2 => 2
+        case x if x % 2 == 0 => x + 1
+        case x if x % 2 != 0 => x - 1
 
         ys.sum + " " + zs.sum
