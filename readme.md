@@ -300,10 +300,10 @@ Can be equivalently rewritten as
 while
     A
     B
-do ()
+()
 ```
 
-With a slightly cleverer parser, the ugly `do ()` at the end of the loop can be removed, although for now it is required.
+With a slightly cleverer parser, the ugly `()` at the end of the loop can be removed, although for now it is required.
 
 More?
 =====

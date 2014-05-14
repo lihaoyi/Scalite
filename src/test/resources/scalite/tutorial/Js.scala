@@ -293,7 +293,7 @@ object Json
 
                 chNext()
                 (state != 3)
-            do ()
+            ()
             tokenKind = STRING
             tokenValue = chSubstr(first, 3)
 
@@ -378,7 +378,7 @@ object Json
                     while
                         chNext()
                         (chKind == Blank)
-                    do ()
+                    ()
                     tokenKind = BLANK
                     tokenValue = ""
 
@@ -393,13 +393,13 @@ object Json
                     while
                         chNext()
                         (ch != '\n' && chKind != Eof)
-                    do ()
+                    ()
                     tokenKind = BLANK
                     tokenValue = ""
 
 
                 (tokenKind == BLANK)
-            do ()
+            ()
 
         def tokenError(msg: String): Nothing =
             throw new Json.Exception(msg, s, linePos, charPos)
