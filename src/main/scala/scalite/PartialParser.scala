@@ -8,9 +8,15 @@ import scala.reflect.internal.util.SourceFile
 
 sealed trait Insert
 object Insert{
-  case class LBraceStack(var baseIndent: Int = 0) extends Insert
-  case class LBraceCaseStack(var baseIndent: Int = 0) extends Insert
-  case class LParenStack(var baseIndent: Int = 0) extends Insert
+  sealed trait Stack extends Insert{
+    var baseIndent: Int = 0
+  }
+  object Stack{
+    case class LBrace() extends Stack
+    case class LBraceCase() extends Stack
+    case class LParen() extends Stack
+  }
+
 
   case object RBrace extends Insert
   case object LBrace extends Insert
@@ -55,13 +61,13 @@ trait PartialParsers extends Parsers with Scanners { t =>
     case (CLASS | TRAIT) #:: _                   => _.classHeader
     case (OBJECT | CASEOBJECT) #:: _             => _.objectHeader
     case DEF #:: _                               => _.defHeader
-    case FOR #:: Empty                           => _ => Seq(1 -> Insert.LBraceStack())
-    case (IF | WHILE) #:: Empty                  => _ => Seq(1 -> Insert.LParenStack())
+    case FOR #:: Empty                           => _ => Seq(1 -> Insert.Stack.LBrace())
+    case (IF | WHILE) #:: Empty                  => _ => Seq(1 -> Insert.Stack.LParen())
     case _ #:: DO #:: Empty                      => _.identBlock
-    case (TRY | ELSE | DO | YIELD) #:: Empty     => _ => Seq(1 -> Insert.LBraceStack())
+    case (TRY | ELSE | DO | YIELD) #:: Empty     => _ => Seq(1 -> Insert.Stack.LBrace())
     case (IF | WHILE) #:: LPAREN #:: _           => _.ifWhileHeader
     case (IF | WHILE) #:: _                      => _.ifWhileLiteHeader
-    case (MATCH | CATCH) #:: Empty               => _ => Seq(1 -> Insert.LBraceCaseStack())
+    case (MATCH | CATCH) #:: Empty               => _ => Seq(1 -> Insert.Stack.LBrace())
     case FOR #:: (LPAREN | LBRACE) #:: _         => _.forHeader
     case FOR #:: _                               => _.forLiteHeader
     case (VAL | VAR) #:: _                       => _.valVarHeader
@@ -93,7 +99,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
       in.nextToken()
       val (nLine, nToken) = (in.line, in.token)
       if (nLine > cLine && colForLine(nLine) > colForLine(cLine)) {
-        Seq(2 -> Insert.LBraceStack())
+        Seq(2 -> Insert.Stack.LBrace())
       }
       else Nil
     }
@@ -106,7 +112,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
       in.token match{
         case EQUALS =>
           in.nextToken()
-          Seq(index -> Insert.LBraceStack())
+          Seq(index -> Insert.Stack.LBrace())
         case _ => Nil
       }
     }
@@ -136,7 +142,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
       in.token match{
         case EQUALS =>
           in.nextToken()
-          Seq(index -> Insert.LBraceStack())
+          Seq(index -> Insert.Stack.LBrace())
         case _ => Nil
       }
     }
@@ -145,7 +151,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
       index = 0
       in.nextToken()
       condExpr()
-      Seq(index -> Insert.LBraceStack())
+      Seq(index -> Insert.Stack.LBrace())
     }
 
     def ifWhileLiteHeader = {
@@ -159,7 +165,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
           Seq(
             startIndex -> Insert.LParen,
             index -> Insert.RParen,
-            index -> Insert.LBraceStack()
+            index -> Insert.Stack.LBrace()
           )
       }
     }
@@ -174,7 +180,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
       if (in.token == YIELD) {
         in.nextToken()
       }
-      Seq(index -> Insert.LBraceStack())
+      Seq(index -> Insert.Stack.LBrace())
     }
     def forLiteHeader = {
       index = 0
@@ -192,7 +198,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
       Seq(
         startIndex -> Insert.LBrace,
         endIndex -> Insert.RBrace,
-        index -> Insert.LBraceStack()
+        index -> Insert.Stack.LBrace()
       )
     }
 
@@ -206,7 +212,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
         templateParents()
       }
 
-      Seq(index -> Insert.LBraceStack())
+      Seq(index -> Insert.Stack.LBrace())
     }
 
     def classHeader = {
@@ -230,7 +236,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
         in.nextToken()
         templateParents()
       }
-      Seq(index -> Insert.LBraceStack())
+      Seq(index -> Insert.Stack.LBrace())
     }
     def parseAll = {
       val buff = mutable.Buffer.empty[TokenData]

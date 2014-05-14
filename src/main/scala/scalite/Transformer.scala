@@ -27,25 +27,37 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
     }
 
     render(input)
+    def offsetFor(i: Int) = i match {
+      case Tokens.CASE => -1
+      case _ => 0
+    }
 
     def nextLineToken(i: Int) = input(i + 1).token match {
-      case Tokens.NEWLINE | Tokens.NEWLINES => Some(i + 2)
-      case _ => Some(i + 1)
+      case Tokens.NEWLINE | Tokens.NEWLINES => i + 2
+      case _ => i + 1
     }
 
     val insertions = {
       val insertions = mutable.Seq.fill[List[Insert]](input.length)(Nil)
 
-      val stack = mutable.Stack[(Int, Boolean, Boolean)]()
+      var stack = List.empty[Insert.Stack]
 
       for (i <- 0 until input.length - 1) {
-        for {
-          next <- nextLineToken(i)
-          if input(next).token != Tokens.CASE
-        } while (!stack.isEmpty && input(next).col < stack.top._1) {
+        val next = nextLineToken(i)
+        println(Seq(
+          token2string(input(next).token),
+          !stack.isEmpty,
+          input(next).col,
+          stack.headOption.map(_.baseIndent),
+          offsetFor(input(next).token)
+        ).mkString("\t"))
+
+        while (!stack.isEmpty && input(next).col < stack.head.baseIndent + offsetFor(input(next).token)) {
+          println("BREAK")
+          val head :: tail = stack
           insertions(i) ::= RBrace
-          if (stack.top._3) insertions(i) ::= RParen
-          stack.pop()
+          if (head.isInstanceOf[Insert.Stack.LParen]) insertions(i) ::= RParen
+          stack = tail
         }
 
         val stream = input.toStream.drop(i)
@@ -55,24 +67,20 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
           tokens = f(new PartialParser(input.toIterator.drop(i), colForLine)(source))
           lastOpt <- tokens.lastOption
           last = input(i + lastOpt._1)
-          next <- nextLineToken(i + tokens.last._1 - 1)
+          next = nextLineToken(i + tokens.last._1 - 1)
           if input(next).line > input(i).line
-          if input(next).col > colForLine(input(i).line) || input(next).token == Tokens.CASE
+          if input(next).col > colForLine(input(i).line) + offsetFor(input(next).token)
           (offset, token) <- tokens
         } {
+          insertions(i + offset - 1) ::= token
           token match {
-            case t: LBraceStack => t.baseIndent = input(next).col
-            case t: LBraceCaseStack => t.baseIndent = input(next).col
-            case t: LParenStack => t.baseIndent = input(next).col
+            case t: Insert.Stack => t.baseIndent = input(next).col - offsetFor(input(next).token)
             case _ =>
           }
-          insertions(i + offset - 1) ::= token
         }
 
         insertions(i).collect {
-          case LBraceStack(baseIndent) => stack.push((baseIndent, false, false))
-          case LBraceCaseStack(baseIndent) => stack.push((baseIndent + 1, false, false))
-          case LParenStack(baseIndent) => stack.push((baseIndent, true, true))
+          case t: Insert.Stack => stack ::= t
         }
       }
       // Close all outstanding braces, making
@@ -93,20 +101,18 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       }
 
       insertions(i).reverse.foreach{
-        case LParenStack(_) =>
+        case Stack.LParen() =>
           for(i <- Seq(Tokens.LPAREN, Tokens.LBRACE)) {
             merged.append(copyData(merged.last, _.token = i))
           }
-        case LBraceCaseStack(_) | LBraceStack(_) | LBrace =>
+        case Stack.LBraceCase() | Stack.LBrace() | LBrace =>
           merged.append(copyData(merged.last, _.token = Tokens.LBRACE))
 
         case RBrace => merged.append(copyData(merged.last, _.token = Tokens.RBRACE))
         case RParen => merged.append(copyData(merged.last, _.token = Tokens.RPAREN))
         case LParen => merged.append(copyData(merged.last, _.token = Tokens.LPAREN))
-
       }
     }
-
 
     render(merged)
 
