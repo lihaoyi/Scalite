@@ -38,14 +38,13 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       }
 
       for (i <- 0 until input.length - 1) {
-        val curr = input(i)
-        for (next <- nextLineToken(i)) {
-          if (input(next).token != Tokens.CASE) while (!stack.isEmpty && input(next).col < stack.top._1) {
-            if (stack.top._2) insertions(i) ::= DeleteDo
-            insertions(i) ::= RBrace
-            if (stack.top._3) insertions(i) ::= RParen
-            stack.pop()
-          }
+        for {
+          next <- nextLineToken(i)
+          if input(next).token != Tokens.CASE
+        } while (!stack.isEmpty && input(next).col < stack.top._1) {
+          insertions(i) ::= RBrace
+          if (stack.top._3) insertions(i) ::= RParen
+          stack.pop()
         }
 
         val stream = input.toStream.drop(i)
@@ -87,14 +86,12 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
 
     insertions.foreach(println)
     val merged = mutable.Buffer.empty[ScannerData]
-    var deleteDo = false
+
     for(i <- 0 until input.length){
       input(i).token match {
-        case Tokens.DO if deleteDo => deleteDo = false
+        case Tokens.DO =>
         case Tokens.NEWLINE => merged.append(input(i))
-        case _ =>
-          merged.append(input(i))
-          deleteDo = false
+        case _ => merged.append(input(i))
       }
 
       insertions(i).reverse.foreach{
@@ -108,7 +105,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
         case RBrace => merged.append(copyData(merged.last, _.token = Tokens.RBRACE))
         case RParen => merged.append(copyData(merged.last, _.token = Tokens.RPAREN))
         case LParen => merged.append(copyData(merged.last, _.token = Tokens.LPAREN))
-        case DeleteDo => deleteDo = true
+
       }
     }
 

@@ -12,7 +12,7 @@ object Insert{
   case class LBraceCaseStack(var baseIndent: Int = 0) extends Insert
   case class LBraceDoStack(var baseIndent: Int = 0) extends Insert
   case class LParenDoStack(var baseIndent: Int = 0) extends Insert
-  case object DeleteDo extends Insert
+
   case object RBrace extends Insert
   case object LBrace extends Insert
   case object RParen extends Insert
@@ -94,7 +94,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
       in.nextToken()
       val (nLine, nToken) = (in.line, in.token)
       if (nLine > cLine && colForLine(nLine) > colForLine(cLine)) {
-        Seq(1 -> Insert.DeleteDo, 2 -> Insert.LBraceStack())
+        Seq(2 -> Insert.LBraceStack())
       }
       else Nil
     }
