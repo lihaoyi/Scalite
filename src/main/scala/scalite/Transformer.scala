@@ -49,9 +49,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
 
       for (i <- 0 until input.length - 1) {
         val next = nextLineToken(i)
-
         while (!stack.isEmpty && input(next).col < stack.head.baseIndent + offsetFor(next)) {
-          println("BREAK")
           val head :: tail = stack
           insertions(i) ::= RBrace
           if (head.isInstanceOf[Insert.Stack.LParen]) insertions(i) ::= RParen
