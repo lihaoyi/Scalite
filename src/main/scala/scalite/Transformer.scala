@@ -28,60 +28,66 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
 
     render(input)
 
-    val insertions = mutable.Seq.fill[List[Insert]](input.length)(Nil)
+    val insertions = {
+      val insertions = mutable.Seq.fill[List[Insert]](input.length)(Nil)
 
-    val stack = mutable.Stack[(Int, Boolean, Boolean)]((1, false, false))
-    def nextLineToken(i: Int) = input(i+1).token match{
-      case Tokens.NEWLINE | Tokens.NEWLINES => Some(i+2)
-      case _ => Some(i+1)
-    }
+      val stack = mutable.Stack[(Int, Boolean, Boolean)]((1, false, false))
+      def nextLineToken(i: Int) = input(i + 1).token match {
+        case Tokens.NEWLINE | Tokens.NEWLINES => Some(i + 2)
+        case _ => Some(i + 1)
+      }
 
-    for(i <- 0 until input.length - 1){
-      val curr = input(i)
-      println(i + "\tloop\t" + stack.top + "\t" + curr.col + "\t" + token2string(curr.token))
-      for(next <- nextLineToken(i)) {
-        if (input(next).token != Tokens.CASE) while(input(next).col < stack.top._1) {
-          if (stack.top._2) insertions(i) ::= DeleteDo
-          insertions(i) ::= RBrace
-          if (stack.top._3)insertions(i) ::= RParen
-          println{"POP STACK " + stack.pop()}
+      for (i <- 0 until input.length - 1) {
+        val curr = input(i)
+        println(i + "\tloop\t" + stack.top + "\t" + curr.col + "\t" + token2string(curr.token))
+        for (next <- nextLineToken(i)) {
+          if (input(next).token != Tokens.CASE) while (input(next).col < stack.top._1) {
+            if (stack.top._2) insertions(i) ::= DeleteDo
+            insertions(i) ::= RBrace
+            if (stack.top._3) insertions(i) ::= RParen
+            println {
+              "POP STACK " + stack.pop()
+            }
+          }
+        }
+
+        val stream = input.toStream.drop(i)
+
+        for {
+          f <- modifierFor.lift(stream.takeWhile(_.line == stream(0).line).map(_.token))
+          tokens = f(new PartialParser(input.toIterator.drop(i), colForLine)(source))
+          lastOpt <- tokens.lastOption
+          last = input(i + lastOpt._1)
+          next <- nextLineToken(i + tokens.last._1 - 1)
+          if input(next).line > input(i).line
+          if input(next).col > colForLine(input(i).line) || input(next).token == Tokens.CASE
+          (offset, token) <- tokens
+        } {
+          token match {
+            case t: LBraceStack => t.baseIndent = input(next).col
+            case t: LBraceCaseStack => t.baseIndent = input(next).col
+            case t: LBraceDoStack => t.baseIndent = input(next).col
+            case t: LParenDoStack => t.baseIndent = input(next).col
+            case _ =>
+          }
+          println("Adding... " + token)
+          insertions(i + offset - 1) ::= token
+        }
+
+        insertions(i).collect {
+          case LBraceStack(baseIndent) => stack.push((baseIndent, false, false))
+          case LBraceCaseStack(baseIndent) => stack.push((baseIndent + 1, false, false))
+          case LBraceDoStack(baseIndent) => stack.push((baseIndent, true, false))
+          case LParenDoStack(baseIndent) => stack.push((baseIndent, true, true))
         }
       }
-
-      val stream = input.toStream.drop(i)
-
-      for{
-        f <- modifierFor.lift(stream.takeWhile(_.line == stream(0).line).map(_.token))
-        tokens = f(new PartialParser(input.toIterator.drop(i), colForLine)(source))
-        lastOpt <- tokens.lastOption
-        last = input(i + lastOpt._1)
-        next <- nextLineToken(i + tokens.last._1 - 1)
-        if input(next).line > input(i).line
-        if input(next).col > colForLine(input(i).line) || input(next).token == Tokens.CASE
-        (offset, token) <- tokens
-      }{
-        token match{
-          case t: LBraceStack => t.baseIndent = input(next).col
-          case t: LBraceCaseStack => t.baseIndent = input(next).col
-          case t: LBraceDoStack => t.baseIndent = input(next).col
-          case t: LParenDoStack => t.baseIndent = input(next).col
-          case _ =>
-        }
-        println("Adding... " + token)
-        insertions(i + offset - 1) ::= token
+      while (stack.length > 1) {
+        insertions(insertions.length - 2) ::= RBrace
+        stack.pop()
       }
+      insertions
+    }
 
-      insertions(i).collect{
-        case LBraceStack(baseIndent) => stack.push((baseIndent, false, false))
-        case LBraceCaseStack(baseIndent) => stack.push((baseIndent + 1, false, false))
-        case LBraceDoStack(baseIndent) => stack.push((baseIndent, true, false))
-        case LParenDoStack(baseIndent) => stack.push((baseIndent, true, true))
-      }
-    }
-    while(stack.length > 1){
-      insertions(insertions.length - 2) ::= RBrace
-      println{"POP STACK " + stack.pop()}
-    }
     insertions.foreach(println)
     val merged = mutable.Buffer.empty[ScannerData]
     var deleteDo = false
