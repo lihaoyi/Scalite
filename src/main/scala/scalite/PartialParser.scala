@@ -6,22 +6,21 @@ import scala.tools.nsc.ast.parser.Tokens._
 import scala.collection.mutable.ListBuffer
 import scala.reflect.internal.util.SourceFile
 
-sealed trait Insert
+sealed class Insert(val inserts: Int*)
 object Insert{
-  sealed trait Stack extends Insert{
+  sealed class Stack(inserts: Int*) extends Insert(inserts:_*){
     var baseIndent: Int = 0
   }
+
   object Stack{
-    case class LBrace() extends Stack
-    case class LBraceCase() extends Stack
-    case class LParen() extends Stack
+    case class LBrace() extends Stack(LBRACE)
+    case class LParen() extends Stack(LPAREN, LBRACE)
   }
 
-
-  case object RBrace extends Insert
-  case object LBrace extends Insert
-  case object RParen extends Insert
-  case object LParen extends Insert
+  case object RBrace extends Insert(RBRACE)
+  case object LBrace extends Insert(LBRACE)
+  case object RParen extends Insert(RPAREN)
+  case object LParen extends Insert(LPAREN)
 }
 
 /**
@@ -184,11 +183,9 @@ trait PartialParsers extends Parsers with Scanners { t =>
     }
     def forLiteHeader = {
       index = 0
-      println("?????????? " + in.token)
       in.nextToken()
 
       val startIndex = index
-      println("?????????? " + in.token)
       generator(eqOK = false)
       val endIndex = index
       newLinesOpt()

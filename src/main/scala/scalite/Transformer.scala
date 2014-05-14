@@ -27,7 +27,12 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
     }
 
     render(input)
-    def offsetFor(i: Int) = i match {
+    /**
+     * Force-offsets `case` tokens one space to the right, so they
+     * can be placed vertically aligned with the match clause and
+     * still get grouped correctly
+     */
+    def offsetFor(i: Int) = input(i).token match {
       case Tokens.CASE => -1
       case _ => 0
     }
@@ -44,15 +49,8 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
 
       for (i <- 0 until input.length - 1) {
         val next = nextLineToken(i)
-        println(Seq(
-          token2string(input(next).token),
-          !stack.isEmpty,
-          input(next).col,
-          stack.headOption.map(_.baseIndent),
-          offsetFor(input(next).token)
-        ).mkString("\t"))
 
-        while (!stack.isEmpty && input(next).col < stack.head.baseIndent + offsetFor(input(next).token)) {
+        while (!stack.isEmpty && input(next).col < stack.head.baseIndent + offsetFor(next)) {
           println("BREAK")
           val head :: tail = stack
           insertions(i) ::= RBrace
@@ -69,12 +67,12 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
           last = input(i + lastOpt._1)
           next = nextLineToken(i + tokens.last._1 - 1)
           if input(next).line > input(i).line
-          if input(next).col > colForLine(input(i).line) + offsetFor(input(next).token)
+          if input(next).col > colForLine(input(i).line) + offsetFor(next)
           (offset, token) <- tokens
         } {
           insertions(i + offset - 1) ::= token
           token match {
-            case t: Insert.Stack => t.baseIndent = input(next).col - offsetFor(input(next).token)
+            case t: Insert.Stack => t.baseIndent = input(next).col - offsetFor(next)
             case _ =>
           }
         }
@@ -91,28 +89,13 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
     }
 
     insertions.foreach(println)
-    val merged = mutable.Buffer.empty[ScannerData]
 
-    for(i <- 0 until input.length){
-      input(i).token match {
-        case Tokens.DO =>
-        case Tokens.NEWLINE => merged.append(input(i))
-        case _ => merged.append(input(i))
-      }
-
-      insertions(i).reverse.foreach{
-        case Stack.LParen() =>
-          for(i <- Seq(Tokens.LPAREN, Tokens.LBRACE)) {
-            merged.append(copyData(merged.last, _.token = i))
-          }
-        case Stack.LBraceCase() | Stack.LBrace() | LBrace =>
-          merged.append(copyData(merged.last, _.token = Tokens.LBRACE))
-
-        case RBrace => merged.append(copyData(merged.last, _.token = Tokens.RBRACE))
-        case RParen => merged.append(copyData(merged.last, _.token = Tokens.RPAREN))
-        case LParen => merged.append(copyData(merged.last, _.token = Tokens.LPAREN))
-      }
-    }
+    val merged = for{
+      (in, ins) <- input.zip(insertions)
+      scannerData <- in :: ins.reverse.flatMap(_.inserts)
+                              .map(i => copyData(in, _.token = i))
+      if scannerData.token != Tokens.DO
+    } yield scannerData
 
     render(merged)
 
