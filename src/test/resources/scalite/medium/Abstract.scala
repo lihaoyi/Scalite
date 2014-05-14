@@ -5,12 +5,12 @@ trait T
   def b: Int
 
 
-abstract class C(_c: Int){
+abstract class C(_c: Int)
   val d: Int
   def e: Int
   var f: Int
   val c = _c
-}
+
 
 class Abstract extends C(1) with T
   val a = 10

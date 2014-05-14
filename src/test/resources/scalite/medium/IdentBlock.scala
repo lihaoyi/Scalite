@@ -12,4 +12,8 @@ class IdentBlock
         case x if x % 2 == 0 => x + 1
         case x if x % 2 != 0 => x - 1
 
+        // val ws = xs.map do x =>
+        //   val x1 = x + 1
+        //   x1 * x1
+
         ys.sum + " " + zs.sum

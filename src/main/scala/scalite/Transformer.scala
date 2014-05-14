@@ -48,22 +48,25 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       var stack = List.empty[Insert.Stack]
 
       for (i <- 0 until input.length - 1) {
-        val next = nextLineToken(i)
-        while (!stack.isEmpty && input(next).col < stack.head.baseIndent + offsetFor(next)) {
+        // Close any outstanding things on the stack
+        val nextIndex = nextLineToken(i)
+        while (!stack.isEmpty && input(nextIndex).col < stack.head.baseIndent + offsetFor(nextIndex)) {
           val head :: tail = stack
           insertions(i) ::= RBrace
           if (head.isInstanceOf[Insert.Stack.LParen]) insertions(i) ::= RParen
           stack = tail
         }
 
+        // Look at whether we need to add new things now or later
         val stream = input.toStream.drop(i)
-
         for {
           f <- modifierFor.lift(stream.takeWhile(_.line == stream(0).line).map(_.token))
-          tokens = f(new PartialParser(input.toIterator.drop(i), colForLine)(source))
-          lastOpt <- tokens.lastOption
-          last = input(i + lastOpt._1)
-          next = nextLineToken(i + tokens.last._1 - 1)
+          (checkEolOpt, tokens) = f(new PartialParser(input.toIterator.drop(i), colForLine)(source))
+
+          next = checkEolOpt.fold(input.indexWhere(_.line > stream(0).line))(
+            e => nextLineToken(i + e - 1)
+          )
+
           if input(next).line > input(i).line
           if input(next).col > colForLine(input(i).line) + offsetFor(next)
           (offset, token) <- tokens
@@ -75,6 +78,7 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
           }
         }
 
+        // Deal with any new things that need to be added *now*
         insertions(i).collect {
           case t: Insert.Stack => stack ::= t
         }
