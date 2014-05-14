@@ -28,14 +28,15 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
 
     render(input)
 
+    def nextLineToken(i: Int) = input(i + 1).token match {
+      case Tokens.NEWLINE | Tokens.NEWLINES => Some(i + 2)
+      case _ => Some(i + 1)
+    }
+
     val insertions = {
       val insertions = mutable.Seq.fill[List[Insert]](input.length)(Nil)
 
       val stack = mutable.Stack[(Int, Boolean, Boolean)]()
-      def nextLineToken(i: Int) = input(i + 1).token match {
-        case Tokens.NEWLINE | Tokens.NEWLINES => Some(i + 2)
-        case _ => Some(i + 1)
-      }
 
       for (i <- 0 until input.length - 1) {
         for {
@@ -62,25 +63,22 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
           token match {
             case t: LBraceStack => t.baseIndent = input(next).col
             case t: LBraceCaseStack => t.baseIndent = input(next).col
-            case t: LBraceDoStack => t.baseIndent = input(next).col
-            case t: LParenDoStack => t.baseIndent = input(next).col
+            case t: LParenStack => t.baseIndent = input(next).col
             case _ =>
           }
-          println("Adding... " + token)
           insertions(i + offset - 1) ::= token
         }
 
         insertions(i).collect {
           case LBraceStack(baseIndent) => stack.push((baseIndent, false, false))
           case LBraceCaseStack(baseIndent) => stack.push((baseIndent + 1, false, false))
-          case LBraceDoStack(baseIndent) => stack.push((baseIndent, true, false))
-          case LParenDoStack(baseIndent) => stack.push((baseIndent, true, true))
+          case LParenStack(baseIndent) => stack.push((baseIndent, true, true))
         }
       }
-      while (stack.length > 0) {
-        insertions(insertions.length - 2) ::= RBrace
-        stack.pop()
-      }
+      // Close all outstanding braces, making
+      // sure to put them before the EOF token
+      for(i <- stack) insertions(insertions.length - 2) ::= RBrace
+
       insertions
     }
 
@@ -95,11 +93,11 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
       }
 
       insertions(i).reverse.foreach{
-        case LParenDoStack(_) =>
+        case LParenStack(_) =>
           for(i <- Seq(Tokens.LPAREN, Tokens.LBRACE)) {
             merged.append(copyData(merged.last, _.token = i))
           }
-        case LBraceDoStack(_) | LBraceCaseStack(_) | LBraceStack(_) | LBrace =>
+        case LBraceCaseStack(_) | LBraceStack(_) | LBrace =>
           merged.append(copyData(merged.last, _.token = Tokens.LBRACE))
 
         case RBrace => merged.append(copyData(merged.last, _.token = Tokens.RBRACE))

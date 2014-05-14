@@ -10,8 +10,7 @@ sealed trait Insert
 object Insert{
   case class LBraceStack(var baseIndent: Int = 0) extends Insert
   case class LBraceCaseStack(var baseIndent: Int = 0) extends Insert
-  case class LBraceDoStack(var baseIndent: Int = 0) extends Insert
-  case class LParenDoStack(var baseIndent: Int = 0) extends Insert
+  case class LParenStack(var baseIndent: Int = 0) extends Insert
 
   case object RBrace extends Insert
   case object LBrace extends Insert
@@ -56,8 +55,8 @@ trait PartialParsers extends Parsers with Scanners { t =>
     case (CLASS | TRAIT) #:: _                   => _.classHeader
     case (OBJECT | CASEOBJECT) #:: _             => _.objectHeader
     case DEF #:: _                               => _.defHeader
-    case FOR #:: Empty                           => _ => Seq(1 -> Insert.LBraceDoStack())
-    case (IF | WHILE) #:: Empty                  => _ => Seq(1 -> Insert.LParenDoStack())
+    case FOR #:: Empty                           => _ => Seq(1 -> Insert.LBraceStack())
+    case (IF | WHILE) #:: Empty                  => _ => Seq(1 -> Insert.LParenStack())
     case _ #:: DO #:: Empty                      => _.identBlock
     case (TRY | ELSE | DO | YIELD) #:: Empty     => _ => Seq(1 -> Insert.LBraceStack())
     case (IF | WHILE) #:: LPAREN #:: _           => _.ifWhileHeader
