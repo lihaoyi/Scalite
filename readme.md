@@ -197,7 +197,7 @@ You can use whitespace-delimited blocks for your own functions too, and not just
 ```scala
 val xs = 0 until 10                                         val xs = 0 until 10
 val ys = xs.map do                                          val ys = xs.map{
-  x => x + 1                                                  x => x + 1
+    x => x + 1                                                x => x + 1
                                                             }
 ys.sum                                                      ys.sum
 // 55                                                       // 55
@@ -221,6 +221,7 @@ val ws = xs.map do x =>                                     val ws = xs.map { x 
     val x1 = x + 1                                            val x1 = x + 1
     x1 * x1                                                   x1 * x1
                                                             }
+ws.sum                                                      ws.sum
 // 385                                                      // 385
 ```
 Tall Headers
