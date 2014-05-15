@@ -214,6 +214,15 @@ zs.sum                                                      zs.sum
 
 The `do` at the end of the can be made optional with a slightly cleverer parser, but for now it is required.
 
+You can also use the `do` with a function that takes an argument, like this:
+
+```scala
+val ws = xs.map do x =>                                     val ws = xs.map { x =>
+    val x1 = x + 1                                            val x1 = x + 1
+    x1 * x1                                                   x1 * x1
+                                                            }
+// 385                                                      // 385
+```
 Tall Headers
 ------------
 

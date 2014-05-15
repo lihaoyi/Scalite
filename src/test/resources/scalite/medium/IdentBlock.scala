@@ -4,7 +4,7 @@ class IdentBlock
     def apply() =
         val xs = 0 until 10
         val ys = xs.map do
-          x => x + 1
+            x => x + 1
 
         val zs = xs.map do
         case 1 => 1
@@ -12,8 +12,8 @@ class IdentBlock
         case x if x % 2 == 0 => x + 1
         case x if x % 2 != 0 => x - 1
 
-        // val ws = xs.map do x =>
-        //   val x1 = x + 1
-        //   x1 * x1
+        val ws = xs.map do x =>
+            val x1 = x + 1
+            x1 * x1
 
-        ys.sum + " " + zs.sum
+        ws.sum + " " + ys.sum + " " + zs.sum
