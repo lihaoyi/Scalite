@@ -38,15 +38,15 @@ trait PartialParsers extends Parsers with Scanners { t =>
   }
   def render(input: Seq[ScannerData])
             (implicit source: SourceFile, colForLine: Seq[Int]) = {
-    println("tokens")
-    input.groupBy(_.line)
-         .toList
-         .sortBy(_._1)
-         .map{ case (line, x) =>
-            " " * colForLine(line) + x.map(x => token2string(x.token)).mkString("\t")
-          }
-         .foreach(println)
-    println("")
+//    println("tokens")
+//    input.groupBy(_.line)
+//         .toList
+//         .sortBy(_._1)
+//         .map{ case (line, x) =>
+//            " " * colForLine(line) + x.map(x => token2string(x.token)).mkString("\t")
+//          }
+//         .foreach(println)
+//    println("")
   }
   implicit class pimpedToken(td: TokenData){
     def pos(implicit source: SourceFile) = source.position(td.offset)

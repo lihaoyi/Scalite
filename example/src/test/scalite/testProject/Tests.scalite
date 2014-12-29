@@ -1,0 +1,39 @@
+import utest._
+
+object Tests extends TestSuite
+  val tests = TestSuite do
+    'simple do
+      'class-assert((new scalite.simple.Class)() == "Hello World!12")
+      'assignments-assert((new scalite.simple.Assignments)() == 9)
+      'modassignments-assert((new scalite.simple.ModAssignments)() == 9)
+      'ifelsewhile-assert((new scalite.simple.IfElseWhile)() == 40)
+      'ifelsewhilelite-assert((new scalite.simple.IfElseWhileLite)() == 36)
+      'for-assert((new scalite.simple.For)() == 10100)
+      'forlite-assert((new scalite.simple.ForLite)() == 10100)
+      'match-assert((new scalite.simple.Match)() == "1")
+      'multidef-assert((new scalite.simple.MultiDef)() == "Hello World!10")
+      'toplevel-assert((new scalite.simple.TopLevel)() == "Hello World!113")
+      'trycatch-assert((new scalite.simple.TryCatch)() == "lolnull")
+
+    'messy do
+      'class-assert((new scalite.messy.Class)() == 12)
+      'assignments-assert((new scalite.messy.Assignments)() == 9)
+      'ifelsewhile-assert((new scalite.messy.IfElseWhile)() == 36)
+      'for-assert((new scalite.messy.For)() == 100)
+
+    'medium do
+      'modifiers-assert((new scalite.medium.Modifiers)() == 1111111)
+      'abstract-assert((new scalite.medium.Abstract)() == 111111)
+      'params-assert((new scalite.medium.Params)() == 11111)
+      'matching-assert((new scalite.medium.Matching)() == "1 2 4")
+      'identblock-assert((new scalite.medium.IdentBlock)() == "385 55 45")
+
+    'long do
+      'for-assert((new scalite.long.For)() == "165 25")
+      'while-assert((new scalite.long.While)() == 45)
+      'if-assert((new scalite.long.If)() == 101)
+
+    'tutorial do
+      'js-assert((new scalite.tutorial.Js)() == """false true null "LOL" 123 [true, false] {"hello": "WorldTrue"}""")
+      'classes-assert((new scalite.tutorial.Classes)() == 11)
+

@@ -89,8 +89,8 @@ trait Transformer extends Parsers with Scanners with PartialParsers{ t =>
 
       insertions
     }
-
-    insertions.foreach(println)
+//
+//    insertions.foreach(println)
 
     val merged = for{
       (in, ins) <- input.zip(insertions)
