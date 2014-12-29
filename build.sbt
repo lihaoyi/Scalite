@@ -1,5 +1,6 @@
 val sharedSettings = Seq(
   organization  := "com.lihaoyi",
+  version := "0.1.0",
   publishTo := Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
   pomExtra :=
     <url>https://github.com/lihaoyi/Scalite</url>
@@ -41,6 +42,9 @@ lazy val example = project.settings(sharedSettings ++ scalite.SbtPlugin.projectS
   scalaVersion  := "2.11.4",
   libraryDependencies += "com.lihaoyi" %% "utest" % "0.2.4",
   testFrameworks += new TestFramework("utest.runner.JvmFramework"),
-  (compile in Compile) <<= (compile in Compile).dependsOn(publishLocal in api)
+  (compile in Compile) <<= (compile in Compile).dependsOn(publishLocal in api),
+  publish := ()
 )
+
+publish := ()
 
