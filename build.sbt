@@ -43,8 +43,8 @@ lazy val example = project.settings(sharedSettings ++ scalite.SbtPlugin.projectS
   libraryDependencies += "com.lihaoyi" %% "utest" % "0.2.4",
   testFrameworks += new TestFramework("utest.runner.JvmFramework"),
   (compile in Compile) <<= (compile in Compile).dependsOn(publishLocal in api),
-  publish := ()
+  publishArtifact := false
 )
 
-publish := ()
+publishArtifact := false
 
