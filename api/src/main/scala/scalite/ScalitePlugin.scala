@@ -11,7 +11,6 @@ class ScalitePlugin(val global: Global) extends Plugin {
   val name = "demo"
   val description = "a plugin"
   val components = List[PluginComponent](DemoComponent)
-  println("ScalitePlugin!!")
   object sal extends {override val global = ScalitePlugin.this.global} with SyntaxAnalyzerLite {
 
     override val runsAfter: List[String] = Nil
