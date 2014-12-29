@@ -27,6 +27,20 @@ object Run                                                  object Run {
 
 **Scalite** is an experimental whitespace-delimited syntax for the scala programming language. This lets you delimit block scope using indentation rather than curly braces, reducing the amount of unnecessary curly braces within the source code. This is an important step in view of the great curly-brace shortage of 2007.
 
+You can use Scalite in your own projects via
+
+```scala
+// project/build.sbt
+addSbtPlugin("com.lihaoyi" % "scalite-sbt-plugin" % "0.1.0")
+
+// build.sbt
+scalite.SbtPlugin.projectSettings
+
+scalaVersion := "2.11.4"
+```
+
+This will cause any `.scalite` files in your `src/main/scalite` and `src/test/scalite` folders to be picked up by the Scalite compiler plugin automatically. Your `.scalite` files can interop perfectly with existing `.scala` code, e.g. calling back and forth. Error reporting, incremental compilation, and all that should work great. Note that Scalite only works with Scala 2.11.x.
+
 Syntax
 ======
 

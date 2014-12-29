@@ -3,7 +3,7 @@ package scalite
 import sbt.Keys._
 import sbt._
 object SbtPlugin extends sbt.AutoPlugin{
-  val scalatexVersion = "0.1.0"
+  val scaliteVersion = "0.1.0"
   val scaliteDirectory = taskKey[sbt.File]("Clone stuff from github")
   val mySeq = Seq(
     scaliteDirectory := sourceDirectory.value / "scalite",
@@ -26,6 +26,8 @@ object SbtPlugin extends sbt.AutoPlugin{
     }
   )
   override val projectSettings = inConfig(Test)(mySeq) ++ inConfig(Compile)(mySeq) ++ Seq(
+    autoCompilerPlugins := true,
+    addCompilerPlugin("com.lihaoyi" %% "scalite" % scaliteVersion),
     watchSources ++= ((scaliteDirectory in Compile).value ** "*.scalite").get
   )
 }

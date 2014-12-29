@@ -1,4 +1,4 @@
 <plugin>
-  <name>demo-plugin</name>
-  <classname>demo.DemoPlugin</classname>
+  <name>scalite-plugin</name>
+  <classname>scalite.ScalitePlugin</classname>
 </plugin>
