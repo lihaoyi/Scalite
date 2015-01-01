@@ -332,7 +332,7 @@ With a slightly cleverer parser, the ugly `()` at the end of the loop can be rem
 More?
 =====
 
-Want to see more? I have ported uPickle's pure-scala JSON parser to Scalite! Comparing the [original code](https://github.com/lihaoyi/upickle/blob/master/shared/main/scala/upickle/Js.scala) with the [Scalite version ](src/test/resources/scalite/tutorial/Js.scala) should give a good sense of what a messy, real world code base looks like in Scalite. You can also leaf through the [unit tests samples](src/test/resources/scalite/simple) for more examples of what Scalite code looks like.
+Want to see more? I have ported uPickle's pure-scala JSON parser to Scalite! Comparing the [original code](https://github.com/lihaoyi/upickle/blob/master/shared/main/scala/upickle/Js.scala) with the [Scalite version ](src/test/resources/scalite/tutorial/Js.scala) should give a good sense of what a messy, real world code base looks like in Scalite. You can also leaf through the [unit tests samples](example/src/test/scalite/simple) for more examples of what Scalite code looks like.
 
 Read previous discussion on the [Google Group](https://groups.google.com/forum/#!topic/scala-language/yl9BRqlpjJ0) if you want to know the background behind this.
 
