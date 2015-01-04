@@ -46,5 +46,33 @@ lazy val example = project.settings(sharedSettings ++ scalite.SbtPlugin.projectS
   publishArtifact := false
 )
 
+lazy val sprayTemplate = project.settings(scalite.SbtPlugin.projectSettings:_*).settings(
+  organization  := "com.example",
+  version       := "0.1",
+  scalaVersion  := "2.11.2",
+  scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8"),
+  libraryDependencies ++= {
+    val akkaV = "2.3.6"
+    val sprayV = "1.3.2"
+    Seq(
+      "io.spray"            %%  "spray-can"     % sprayV,
+      "io.spray"            %%  "spray-routing" % sprayV,
+      "io.spray"            %%  "spray-testkit" % sprayV  % "test",
+      "com.typesafe.akka"   %%  "akka-actor"    % akkaV,
+      "com.typesafe.akka"   %%  "akka-testkit"  % akkaV   % "test",
+      "org.specs2"          %%  "specs2-core"   % "2.3.11" % "test"
+    )
+  }
+)
+
+lazy val scalajsExample = project.settings(scalaJSSettings ++ scalite.SbtPlugin.projectSettings:_*)
+                                      .settings(
+  name := "Example",
+  version := "0.1-SNAPSHOT",
+  scalaVersion := "2.11.2",
+  libraryDependencies ++= Seq(
+    "org.scala-lang.modules.scalajs" %%% "scalajs-dom" % "0.6"
+  )
+)
 publishArtifact := false
 
