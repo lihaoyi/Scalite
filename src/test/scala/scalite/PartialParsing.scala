@@ -2,7 +2,7 @@ package scalite
 
 import org.scalatest._
 import scala.tools.nsc.reporters.ConsoleReporter
-import scala.tools.nsc.Settings
+import scala.tools.nsc.{Global, Settings}
 import scala.reflect.internal.util.{BatchSourceFile, SourceFile}
 import scala.reflect.io.VirtualFile
 import scala.tools.nsc.ast.parser.Tokens
@@ -82,7 +82,7 @@ class PartialParsing extends FreeSpec{
     val settings = {
       val s =  new Settings
       //s.Xprint.value = List("all")
-      val classPath = getFilePaths("/Runtimes/scala-2.11.0-M4/lib") :+ "target/scala-2.10/classes"
+      val classPath = getFilePaths("Runtimes/scala-2.11.5/lib") :+ "target/scala-2.11/classes"
 
       classPath.map(new java.io.File(_).getAbsolutePath).foreach{ f =>
         s.classpath.append(f)
@@ -94,11 +94,10 @@ class PartialParsing extends FreeSpec{
     val compiler = new Globalite(settings, new ConsoleReporter(settings))
     import compiler._
 
-    val scanner = new syntaxAnalyzer.UnitScannerX(
-      new CompilationUnit(
-        new BatchSourceFile(new VirtualFile("test.scala", ""), s)
-      )
+    val cu: CompilationUnit = new CompilationUnit(
+      new BatchSourceFile(new VirtualFile("test.scala", ""), s)
     )
+    val scanner = new syntaxAnalyzer.UnitScannerX(unit = cu)
 
     val run = new Run()
     compiler.pushPhase(run.parserPhase)

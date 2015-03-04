@@ -4,3 +4,4 @@ project/target/*
 .idea/*
 .idea_modules/*
 *.iml
+Runtimes/scala-2.11.5

@@ -4,13 +4,11 @@ name := "scalite"
 
 version       := "0.1"
 
-scalaVersion  := "2.11.0-M4"
+scalaVersion  := "2.11.5"
 
 libraryDependencies ++= Seq(
-  "org.scalatest" % "scalatest_2.11.0-M4" % "2.0.M6-SNAP35",
-  "org.scala-lang" % "scala-compiler" % "2.11.0-M4"
+  "org.scalatest" % "scalatest_2.11" % "2.2.4",
+  "org.scala-lang" % "scala-compiler" % "2.11.5"
 )
-
-unmanagedSourceDirectories in Test <+= baseDirectory(_ / "src" / "test" / "resources")
 
 

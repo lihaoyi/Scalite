@@ -125,7 +125,7 @@ trait PartialParsers extends Parsers with Scanners { t =>
       in.nextToken()
       val startIndex = index
 
-      generator(new ListBuffer[Enumerator], eqOK = false)
+      generator(eqOK = false)
       val endIndex = index
       newLinesOpt()
       if (in.token == YIELD) {
