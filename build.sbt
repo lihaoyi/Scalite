@@ -25,7 +25,7 @@ val sharedSettings = Seq(
 lazy val api = project.settings(sharedSettings:_*).settings(
   name := "scalite",
   version       := scalite.SbtPlugin.scaliteVersion,
-  scalaVersion  := "2.11.4",
+  scalaVersion  := "2.11.7",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   (resources in Test) ++=  (managedClasspath in Compile).value.map(_.data)
 )
@@ -33,13 +33,13 @@ lazy val api = project.settings(sharedSettings:_*).settings(
 lazy val scaliteSbtPlugin = project.settings(sharedSettings:_*)
   .settings(
     name := "scalite-sbt-plugin",
-    scalaVersion := "2.10.4",
+    scalaVersion := "2.10.6",
     sbtPlugin := true
   )
 
 lazy val example = project.settings(sharedSettings ++ scalite.SbtPlugin.projectSettings:_*)
                               .settings(
-  scalaVersion  := "2.11.4",
+  scalaVersion  := "2.11.7",
   libraryDependencies += "com.lihaoyi" %% "utest" % "0.2.4",
   testFrameworks += new TestFramework("utest.runner.JvmFramework"),
   (compile in Compile) <<= (compile in Compile).dependsOn(publishLocal in api),
@@ -49,11 +49,11 @@ lazy val example = project.settings(sharedSettings ++ scalite.SbtPlugin.projectS
 lazy val sprayTemplate = project.settings(scalite.SbtPlugin.projectSettings:_*).settings(
   organization  := "com.example",
   version       := "0.1",
-  scalaVersion  := "2.11.2",
+  scalaVersion  := "2.11.7",
   scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8"),
   libraryDependencies ++= {
-    val akkaV = "2.3.6"
-    val sprayV = "1.3.2"
+    val akkaV = "2.3.14"
+    val sprayV = "1.3.3"
     Seq(
       "io.spray"            %%  "spray-can"     % sprayV,
       "io.spray"            %%  "spray-routing" % sprayV,
@@ -65,14 +65,15 @@ lazy val sprayTemplate = project.settings(scalite.SbtPlugin.projectSettings:_*).
   }
 )
 
-lazy val scalajsExample = project.settings(scalaJSSettings ++ scalite.SbtPlugin.projectSettings:_*)
-                                      .settings(
-  name := "Example",
-  version := "0.1-SNAPSHOT",
-  scalaVersion := "2.11.2",
-  libraryDependencies ++= Seq(
-    "org.scala-lang.modules.scalajs" %%% "scalajs-dom" % "0.6"
+lazy val scalajsExample = project.enablePlugins(ScalaJSPlugin)
+  .settings(scalite.SbtPlugin.projectSettings:_*)
+  .settings(
+    name := "Example",
+    version := "0.1-SNAPSHOT",
+    scalaVersion := "2.11.7",
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "0.8.0"
+    )
   )
-)
 publishArtifact := false
 

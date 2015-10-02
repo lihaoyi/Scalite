@@ -10,7 +10,7 @@ case class Point(x: Int, y: Int) do
 @JSExport
 object ScalaJSExample
   @JSExport
-  def main(canvas: dom.HTMLCanvasElement): Unit =
+  def main(canvas: dom.raw.HTMLCanvasElement): Unit =
     val ctx = canvas.getContext("2d")
                     .asInstanceOf[dom.CanvasRenderingContext2D]
 
